@@ -1,9 +1,6 @@
 #pragma once
 
 
-
-
-
 #ifndef BIGFIGURE_H
 #define BIGFIGURE_H
 
@@ -134,4 +131,3 @@ public:
 typedef BigFigure BF;
 
 #endif
-

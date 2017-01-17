@@ -5,6 +5,11 @@ VisualStudioVersion = 15.0.25928.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BigFigure库", "BigFigure库\BigFigure库.vcxproj", "{00F9921C-2E22-4658-AEFC-A0D450686325}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "库测试项目", "库测试项目\库测试项目.vcxproj", "{DDC71B65-AD08-4985-AFAD-8CE961026B98}"
+	ProjectSection(ProjectDependencies) = postProject
+		{00F9921C-2E22-4658-AEFC-A0D450686325} = {00F9921C-2E22-4658-AEFC-A0D450686325}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,6 +26,14 @@ Global
 		{00F9921C-2E22-4658-AEFC-A0D450686325}.Release|x64.Build.0 = Release|x64
 		{00F9921C-2E22-4658-AEFC-A0D450686325}.Release|x86.ActiveCfg = Release|Win32
 		{00F9921C-2E22-4658-AEFC-A0D450686325}.Release|x86.Build.0 = Release|Win32
+		{DDC71B65-AD08-4985-AFAD-8CE961026B98}.Debug|x64.ActiveCfg = Debug|x64
+		{DDC71B65-AD08-4985-AFAD-8CE961026B98}.Debug|x64.Build.0 = Debug|x64
+		{DDC71B65-AD08-4985-AFAD-8CE961026B98}.Debug|x86.ActiveCfg = Debug|Win32
+		{DDC71B65-AD08-4985-AFAD-8CE961026B98}.Debug|x86.Build.0 = Debug|Win32
+		{DDC71B65-AD08-4985-AFAD-8CE961026B98}.Release|x64.ActiveCfg = Release|x64
+		{DDC71B65-AD08-4985-AFAD-8CE961026B98}.Release|x64.Build.0 = Release|x64
+		{DDC71B65-AD08-4985-AFAD-8CE961026B98}.Release|x86.ActiveCfg = Release|Win32
+		{DDC71B65-AD08-4985-AFAD-8CE961026B98}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
