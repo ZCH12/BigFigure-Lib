@@ -27,6 +27,6 @@ public :
 	
 	char * c_str();
 	friend std::ostream& operator<<(std::ostream &os, BFString &Source);
-
+	friend class BigFigure;
 };
 #endif

@@ -111,6 +111,9 @@ public:
 	BigFigure& operator=(const __int64 Source);
 	BigFigure& operator=(const long Source);
 	BigFigure& operator=(const int Source);
+
+	friend std::ostream& operator<<(std::ostream &os, BigFigure &Source);
+
 	/*
 	friend BigFigure operator+(const BigFigure &OperandA, const BigFigure &OperandB);
 	friend BigFigure operator+(const BigFigure &OperandA, const double OperandB);

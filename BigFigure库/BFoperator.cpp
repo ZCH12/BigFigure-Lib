@@ -35,3 +35,9 @@ BigFigure& BigFigure::operator=(const int Source)
 	this->toBF(NumStringDetail(Source));
 	return *this;
 }
+
+std::ostream& operator<<(std::ostream &os, BigFigure &Source)
+{
+	os << Source.toBFString().c_str();
+	return os;
+}
