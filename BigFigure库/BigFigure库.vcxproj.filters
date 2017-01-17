@@ -14,4 +14,41 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="BFException.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="BFFunc.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="BFString.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="BigFiugre.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NumStringDetail.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="_BFcore.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="BFException.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="BFoperator.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="BFString.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="BigFiugre.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="NumStringDetail.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
 </Project>
