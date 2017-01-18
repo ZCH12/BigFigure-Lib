@@ -123,8 +123,11 @@ BigFigure& BigFigure::Expand(size_t IntSize, size_t FloatSize)
 				strncpy(temp, Detail->pSInt + Detail->LenInt - IntSize, IntSize);//进行安全截断
 		}
 		if (FloatSize >= Detail->LenFloat)
-			strncpy(temp + IntSize + 1, Detail->pSFloat, Detail->LenFloat + 1);//小数部分安全得进行复制
-
+		{
+			if (Detail->LenFloat != 0)
+				strncpy(temp + IntSize + 1, Detail->pSFloat, Detail->LenFloat + 1);//小数部分安全得进行复制
+			temp[IntSize + 1 + Detail->LenFloat] = 0;
+		}
 		else
 		{
 			//小数部分将会被截断
@@ -143,7 +146,7 @@ BigFigure& BigFigure::Expand(size_t IntSize, size_t FloatSize)
 		delete[] Detail->DataHead;
 		Detail->DataHead = temp;
 		Detail->pSRP = temp + IntSize;
-		if (Detail->LenInt > IntSize)
+		if (Detail->LenInt > IntSize)			//为被截断的数字重新计算长度
 			Detail->LenInt = IntSize;
 		if (Detail->LenFloat > FloatSize)
 			Detail->LenFloat = FloatSize;

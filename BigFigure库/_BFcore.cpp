@@ -1,7 +1,7 @@
 #define _DLL_API_ 
 #include  "BigFiugre.h"
 
-#define CONST_OVER9 106		//该值等于'0'+'6'+1
+#define CONST_OVER9 106		//该值等于'0'+'9'+1
 
 //此文件用于存放所有算法核心函数
 //都是友元函数或友元模板
@@ -17,41 +17,64 @@
 BigFigure& core_IntAdd(BigFigure & result, const BigFigure & OperandA, const BigFigure & OperandB, int carry)
 {
 	//判断内存是否足够
-	int buffer;									//计算时的缓冲区
-	int index_r = (int)result.Detail->AllocInt - 1,
-		index_A = (int)OperandA.Detail->LenInt - 1,
-		index_B = (int)OperandB.Detail->LenInt - 1;	//正在处理的位的下标
-	char *String1 = OperandA.Detail->pSInt,		//保存字符串的首指针
-		*String2 = OperandB.Detail->pSInt;
+	int buffer;										//计算时的缓冲区
+	int offsetA = 0, offsetB = 0;
 
-	if (index_A > index_r)
+
+	if (OperandA.Detail->LenInt > result.Detail->AllocInt)
 	{
 		//内存不足以存放,准备报错
-		if (ConfirmWontLossHighBit)
-			throw BFException(ERR_NUMBERTOOBIG, "操作数A的值太大,无法存储到result中", EXCEPTION_DETAIL);
+		if (AutoExpand)
+		{
+			//对空间进行拓展
+			size_t temp1 = OperandA.Detail->LenInt > OperandB.Detail->LenInt ? OperandA.Detail->LenInt : OperandB.Detail->LenInt;
+			result.Expand((temp1 > result.Detail->AllocInt ? temp1 : result.Detail->AllocInt) + 2,
+				result.Detail->AllocFloat);
+		}
 		else
 		{
-			//进行截断(截去高位),注意,截断之后的数字跟之前不同
-			String1 += OperandA.Detail->LenInt - result.Detail->AllocInt;
-			index_A = index_r;
+			if (ConfirmWontLossHighBit)
+				throw BFException(ERR_NUMBERTOOBIG, "操作数A的值太大,无法存储到result中", EXCEPTION_DETAIL);
+			else
+			{
+				//进行截断(截去高位),注意,截断之后的数字跟之前不同
+				offsetA = OperandA.Detail->LenInt - result.Detail->AllocInt;
+			}
 		}
 	}
-	if (index_B > index_r)
+	if (OperandB.Detail->LenInt > result.Detail->AllocInt)
 	{
-		//内存不足以存放,准备报错
-		if (ConfirmWontLossHighBit)
-			throw BFException(ERR_NUMBERTOOBIG, "操作数B的值太大,无法存储到result中", EXCEPTION_DETAIL);
+		if (AutoExpand)
+		{
+			//对空间进行拓展
+			result.Expand((OperandB.Detail->LenInt > result.Detail->AllocInt ? OperandB.Detail->LenInt : result.Detail->AllocInt) + 2,
+				result.Detail->AllocFloat);
+		}
 		else
 		{
-			//进行截断(截去高位),注意,截断之后的数字跟之前不同
-			String2 += OperandB.Detail->LenInt - result.Detail->AllocInt;
-			index_B = index_r;
+			//内存不足以存放,准备报错
+			if (ConfirmWontLossHighBit)
+				throw BFException(ERR_NUMBERTOOBIG, "操作数B的值太大,无法存储到result中", EXCEPTION_DETAIL);
+			else
+			{
+				//进行截断(截去高位),注意,截断之后的数字跟之前不同
+				offsetB = OperandB.Detail->LenInt - result.Detail->AllocInt;
+			}
 		}
+
 	}
 
-	while (index_A >= 0 && index_B >= 0)
+	char *StringAH = OperandA.Detail->pSInt + offsetA,	//字符串A的首指针
+		*StringAT = OperandA.Detail->pSRP - 1,			//字符串的尾指针,也是写入位置
+		*StringBH = OperandB.Detail->pSInt + offsetB,	//字符串B的首指针
+		*StringBT = OperandB.Detail->pSRP - 1,			//字符串B的尾指针,也是写入位置
+		*StringRH = result.Detail->DataHead,
+		*StringRT = result.Detail->pSRP - 1;
+
+
+	while (StringRH <= StringRT&&StringAH <= StringAT&&StringBH <= StringBT)
 	{
-		buffer = (int)String1[index_A] + String2[index_B] + carry;
+		buffer = (int)*StringAT + *StringBT + carry;
 		if (buffer >= CONST_OVER9)
 		{
 			//大于9,将要进行进位
@@ -64,66 +87,65 @@ BigFigure& core_IntAdd(BigFigure & result, const BigFigure & OperandA, const Big
 			buffer -= '0';
 			carry = 0;
 		}
-		result.Detail->DataHead[index_r--] = (char)buffer;
-		index_A--;
-		index_B--;
+		*(StringRT--) = (char)buffer;
+		StringAT--;
+		StringBT--;
 	}
 
 	//当存在进位时,并且A还有余下位时,要加上进位,到没有进位后就是纯粹的复制
-	while (carry&&index_A >= 0)
+	while (carry&&StringAH <= StringAT&&StringRH <= StringRT)
 	{
-		buffer = String1[index_A] + carry;
-		if (buffer >= '9')
+		buffer = *StringAT + carry;
+		if (buffer > '9')
 		{
 			//大于9,将要进行进位
 			buffer -= 10;
 			carry = 1;
 		}
 		else
-		{
-			//数字没有大于9,不需要进位
-			carry = 0;
-		}
-		result.Detail->DataHead[index_r--] = (char)buffer;
-		index_A--;
+			carry = 0;//数字没有大于9,不需要进位
+		*StringRT = (char)buffer;
+		StringRT--;
+		StringAT--;
 	}
 	//当存在进位时,并且B还有余下位时,要加上进位,到没有进位后就是纯粹的复制
-	while (carry&&index_B >= 0)
+	while (carry&&StringBH <= StringBT&&StringRH <= StringRT)
 	{
-		buffer = String2[index_B] + carry;
-		if (buffer >= '9')
+		buffer = *StringBT + carry;
+		if (buffer > '9')
 		{
 			//大于9,将要进行进位
 			buffer -= 10;
 			carry = 1;
 		}
 		else
-		{
-			//数字没有大于9,不需要进位
-			carry = 0;
-		}
-		result.Detail->DataHead[index_r--] = (char)buffer;
-		index_B--;
+			carry = 0;//数字没有大于9,不需要进位
+		*(StringRT--) = (char)buffer;
+		StringBT--;
 	}
 	//复制剩下的,A或B多出的并且是没有进位的位(在这个地方时,可以确保不会出现越界的情况)
-	while (index_A >= 0)
-		result.Detail->DataHead[index_r--] = String1[index_A--];
-	while (index_B >= 0)
-		result.Detail->DataHead[index_r--] = String2[index_B--];
+	while (StringAH <= StringAT&&StringRH <= StringRT)
+		*(StringRT--) = *(StringAT--);
+	while (StringBH <= StringBT&&StringRH <= StringRT)
+		*(StringRT--) = *(StringBT--);
 
 	if (carry)
 	{
-		if (index_r >= 0)
-			result.Detail->DataHead[index_r--] = '1';
+		if (StringRH <= StringRT)
+			*StringRT = '1';
 	}
+	else
+		StringRT++;																//回到数字最前面的第一个有效位
+
 	result.Detail->Legal = true;
-	result.Detail->LenInt = result.Detail->AllocInt - index_r - 1;
-	result.Detail->pSInt = result.Detail->DataHead + index_r + 1;
+	result.Detail->LenInt = result.Detail->pSRP - StringRT;
+	result.Detail->pSInt = StringRT;
+
 	if (!ConfirmWontLossHighBit)
 	{
-		while (*result.Detail->pSInt == '0')result.Detail->pSInt++;
-		result.Detail->LenInt = result.Detail->pSRP - result.Detail->pSInt;
-		if (result.Detail->LenInt == 0)
+		while (*result.Detail->pSInt == '0')result.Detail->pSInt++;				//去除因进位溢出导致的'0'开头
+		result.Detail->LenInt = result.Detail->pSRP - result.Detail->pSInt;		//重新计算长度
+		if (result.Detail->LenInt == 0)											//如果整数部分长度为0,则赋予"0"
 		{
 			result.Detail->LenInt = 1;
 			result.Detail->pSInt = result.Detail->pSRP - 1;
@@ -131,8 +153,6 @@ BigFigure& core_IntAdd(BigFigure & result, const BigFigure & OperandA, const Big
 		}
 	}
 	return result;
-
-
 }
 template <class T>BigFigure& core_IntAdd_Basis(BigFigure & result, const BigFigure & OperandA, T OperandB, int carry)
 {
