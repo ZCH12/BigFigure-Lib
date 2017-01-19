@@ -2,9 +2,56 @@
 #include  "BigFiugre.h"
 
 #define CONST_OVER9 106		//该值等于'0'+'9'+1
+#define INT_MAXLEN 32		//该值用于模板,表示的是最大的整数类型的长度,如果一个对象与一个整数进行操作时,整数部分长度小于这个长度,则将对象重新进行分配
 
 //此文件用于存放所有算法核心函数
 //都是友元函数或友元模板
+
+template <typename T> size_t _CountBits(T Num)
+{
+	const long long Flag[] = {
+		0,
+		0,
+		9,
+		99,
+		999,
+		9999,
+		99999,
+		999999,
+		9999999,
+		99999999,
+		999999999,
+		9999999999,
+		99999999999,
+		999999999999,
+		9999999999999,
+		99999999999999,
+		999999999999999,
+		9999999999999999,
+		99999999999999999,
+		9223372036854775807i64
+	};
+	int size = 0;
+	if (typeid(Num) == typeid(short))
+		size = 5;
+	else if (typeid(Num) == typeid(int))
+		size = 10;
+	else if (typeid(Num) == typeid(long))
+#ifdef _M_IX86
+		size = 10;
+#else
+		size = 19;
+#endif
+	else if (typeid(Num) == typeid(__int64))
+		size = 19;
+	else
+		size = 19;
+	while (Flag[size] > Num&&size >= 0)size--;
+	return size;
+}
+
+
+
 
 /*
 该函数是BF整数加法核心,没有正负判断,纯粹地按位相加
@@ -21,14 +68,14 @@ BigFigure& core_IntAdd(BigFigure & result, const BigFigure & OperandA, const Big
 	int offsetA = 0, offsetB = 0;
 
 
-	if (OperandA.Detail->LenInt > result.Detail->AllocInt)
+	if (OperandA.Detail->LenInt >= result.Detail->AllocInt)
 	{
 		//内存不足以存放,准备报错
 		if (AutoExpand)
 		{
 			//对空间进行拓展
-			size_t temp1 = OperandA.Detail->LenInt > OperandB.Detail->LenInt ? OperandA.Detail->LenInt : OperandB.Detail->LenInt;
-			result.Expand((temp1 > result.Detail->AllocInt ? temp1 : result.Detail->AllocInt) + 2,
+			size_t temp1 = OperandA.Detail->LenInt >= OperandB.Detail->LenInt ? OperandA.Detail->LenInt : OperandB.Detail->LenInt;
+			result.Expand((temp1 > result.Detail->AllocInt ? temp1 : result.Detail->AllocInt) + 1,
 				result.Detail->AllocFloat);
 		}
 		else
@@ -38,16 +85,16 @@ BigFigure& core_IntAdd(BigFigure & result, const BigFigure & OperandA, const Big
 			else
 			{
 				//进行截断(截去高位),注意,截断之后的数字跟之前不同
-				offsetA = OperandA.Detail->LenInt - result.Detail->AllocInt;
+				offsetA = (int)(OperandA.Detail->LenInt - result.Detail->AllocInt);
 			}
 		}
 	}
-	if (OperandB.Detail->LenInt > result.Detail->AllocInt)
+	if (OperandB.Detail->LenInt >= result.Detail->AllocInt)
 	{
 		if (AutoExpand)
 		{
 			//对空间进行拓展
-			result.Expand((OperandB.Detail->LenInt > result.Detail->AllocInt ? OperandB.Detail->LenInt : result.Detail->AllocInt) + 2,
+			result.Expand((OperandB.Detail->LenInt >= result.Detail->AllocInt ? OperandB.Detail->LenInt : result.Detail->AllocInt) + 1,
 				result.Detail->AllocFloat);
 		}
 		else
@@ -58,7 +105,7 @@ BigFigure& core_IntAdd(BigFigure & result, const BigFigure & OperandA, const Big
 			else
 			{
 				//进行截断(截去高位),注意,截断之后的数字跟之前不同
-				offsetB = OperandB.Detail->LenInt - result.Detail->AllocInt;
+				offsetB = (int)(OperandB.Detail->LenInt - result.Detail->AllocInt);
 			}
 		}
 
@@ -129,10 +176,9 @@ BigFigure& core_IntAdd(BigFigure & result, const BigFigure & OperandA, const Big
 	while (StringBH <= StringBT&&StringRH <= StringRT)
 		*(StringRT--) = *(StringBT--);
 
-	if (carry)
+	if (carry&&StringRH <= StringRT)
 	{
-		if (StringRH <= StringRT)
-			*StringRT = '1';
+		*StringRT = '1';
 	}
 	else
 		StringRT++;																//回到数字最前面的第一个有效位
@@ -154,15 +200,47 @@ BigFigure& core_IntAdd(BigFigure & result, const BigFigure & OperandA, const Big
 	}
 	return result;
 }
+//BF加基本数字的模板,只能用于整数加整数,如果是浮点数,请先转换为BF然后调用core_IntAdd进行计算,此函数只进行整数部分的处理,如果是一个小数加上此基本数据,还需要调用core_FloatCopy来复制小数部分到result
+/*
+@param result 存储结果的对象
+@param OperandA 操作数A
+@param OperandB 操作数B(基本数据类型)
+@param carry 是否进位(该值只允许为1或0)
+@return result
+*/
 template <class T>BigFigure& core_IntAdd_Basis(BigFigure & result, const BigFigure & OperandA, T OperandB, int carry)
 {
-	int index_p = result.Detail->IntAllocatedLen - 1, index_r = OperandA.Detail->LenInt - 1;
-	char *SourceString = OperandA.Detail->pSInt, *String3 = result.Detail->StringHead;
-	int buffer;
-	for (; index_r >= 0 && OperandB != 0; index_r--)
+	int buffer = 0;											//计算时的缓冲区
+
+	if (OperandA.Detail->LenInt >= result.Detail->AllocInt || (size_t)(buffer = (int)_CountBits<T>(OperandB)) >= result.Detail->AllocInt)
 	{
-		buffer = SourceString[index_r];
-		buffer += OperandB % 10 + carry;
+		//一定不够内存
+		if (AutoExpand)
+		{
+			if (buffer)
+				result.Expand((result.Detail->AllocInt > (size_t)buffer ? result.Detail->AllocInt : (size_t)buffer) + 2
+					, result.Detail->AllocFloat);
+			else
+			{
+				size_t temp = (result.Detail->AllocInt > OperandA.Detail->LenInt ? result.Detail->AllocInt : OperandA.Detail->LenInt) + 2;
+				result.Expand(temp > 32 ? temp : 32, result.Detail->AllocFloat);
+			}
+		}
+		else {
+			if (ConfirmWontLossHighBit)
+			{
+				throw BFException(ERR_MAYACCURACYLOSS, "结果无法保存到result中", EXCEPTION_DETAIL);
+			}
+		}
+	}
+	char *StringRH = result.Detail->DataHead,
+		*StringRT = result.Detail->pSRP - 1,
+		*StringAH = OperandA.Detail->pSInt,
+		*StringAT = OperandA.Detail->pSRP - 1;
+
+	while (StringRH <= StringRT&&StringAH <= StringAT)
+	{
+		buffer = *(StringAT--) + OperandB % 10 + carry;
 		OperandB /= 10;
 		if (buffer > '9')
 		{
@@ -173,48 +251,95 @@ template <class T>BigFigure& core_IntAdd_Basis(BigFigure & result, const BigFigu
 		{
 			carry = 0;
 		}
-		String3[index_p--] = (char)buffer;
+		*(StringRT--) = (char)buffer;
 	}
 
 	if (OperandB != 0)
 	{
-		if (ConfirmWontLossHighBit)
+		while (carry&&StringRH <= StringRT&&OperandB != 0)
 		{
-			result.Detail->Illage = false;
-			throw BFException(ERR_NUMBERTOOBIG, "数字太大无法存储");
-		}
-	}
-	else {
-		while (carry&&index_p >= 0 && index_r >= 0)
-		{
-			buffer = SourceString[index_r] + carry;
-			if (buffer > '9')
+			buffer = OperandB % 10 + carry;
+			OperandB /= 10;
+			if (buffer > 9)
 			{
-				buffer -= 10;
+				buffer += 38;
 				carry = 1;
 			}
 			else
 			{
+				buffer += '0';
 				carry = 0;
 			}
-			String3[index_p] = (char)buffer;
-			index_p--, index_r--;
+			*(StringRT--) = (char)buffer;
 		}
-		if (carry)
+		while (StringRH <= StringRT&&OperandB != 0)
 		{
-			String3[index_p--] = '1';
-			carry = false;
+			*(StringRT--) = OperandB % 10 + '0';
+			OperandB /= 10;
 		}
-
 	}
-	while (index_p >= 0 && index_r >= 0)
-		String3[index_p--] = SourceString[index_r--];
+	if (carry&&StringRH <= StringRT)
+		*(StringRT) = '1';
+	else
+		StringRT++;
 
-	result.Detail->LenInt = result.Detail->IntAllocatedLen - index_p - 1;
-	result.Detail->pSInt = String3 + (index_p == -1 ? 0 : index_p) + 1;
-	result.Detail->Illage = false;
+
+	if (OperandB)
+	{
+		if (ConfirmWontLossHighBit)
+		{
+			result.Detail->Legal = false;
+			throw BFException(ERR_NUMBERTOOBIG, "数字太大无法存储", EXCEPTION_DETAIL);
+		}
+	}
+
+	result.Detail->LenInt = result.Detail->pSRP - StringRT;
+	result.Detail->pSInt = StringRT;
+	result.Detail->Legal = true;
 	return result;
 }
+
+//复制小数部分的数字,此函数一般是调用整数部分处理之后再使用
+/*
+@param result 存储结果的对象
+@param OperandA 操作数A
+@param OperandB 操作数B(基本数据类型)
+@param carry 是否进位(该值只允许为1或0)
+@return result
+*/
+BigFigure& core_FloatCopy(BigFigure &result, const BigFigure &OperandA)
+{
+	if (result.Detail->AllocFloat < OperandA.Detail->LenFloat)						//进行容量判断
+	{
+		//内存不足
+		if (AutoExpand)
+		{
+			result.Expand(result.Detail->AllocInt, OperandA.Detail->LenFloat);		//进行拓展内存
+		}
+		else
+		{
+			if (ConfirmWontLossAccuracy)
+			{
+				result.Detail->Legal = false;
+				throw BFException(ERR_MAYACCURACYLOSS, "小数部分内存不足,可能丢失精度", EXCEPTION_DETAIL);
+			}
+		}
+	}
+	strncpy(result.Detail->pSFloat, OperandA.Detail->pSFloat, result.Detail->AllocFloat);
+	if (result.Detail->AllocFloat > OperandA.Detail->LenFloat)		//取得新的小数位的长度
+		result.Detail->LenFloat = OperandA.Detail->LenFloat;
+	else 
+		result.Detail->LenFloat = result.Detail->AllocFloat;
+	result.Detail->pSFloat[result.Detail->LenFloat] = 0;			//写入字符串结束符
+	return result;
+}
+
+void test(BigFigure & result, const BigFigure & OperandA, long long OperandB, int carry)
+{
+	core_IntAdd_Basis<long long>(result, OperandA, OperandB, 0);
+	core_FloatCopy(result, OperandA);
+}
+
 /*
 int core_FloatAdd(BigFigure & result, const BigFigure & OperandA, const BigFigure & OperandB)
 {

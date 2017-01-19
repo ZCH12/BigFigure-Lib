@@ -70,6 +70,7 @@ public:
 	//ÔËËãº¯Êı
 	friend BigFigure& core_IntAdd(BigFigure & result, const BigFigure & OperandA, const BigFigure & OperandB, int carry);
 	template <class T> friend BigFigure& core_IntAdd_Basis(BigFigure & result, const BigFigure & OperandA, T OperandB, int carry);
+	friend BigFigure& core_FloatCopy(BigFigure &result, const BigFigure &OperandA);
 	/*
 	friend int core_FloatAdd(BigFigure & result, const BigFigure & OperandA, const BigFigure & OperandB);
 	friend BigFigure& core_IntSub(BigFigure & result, const BigFigure & OperandA, const BigFigure & OperandB, int borrow);

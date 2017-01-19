@@ -5,43 +5,15 @@ BFString::BFString(const char * String)
 {
 	try
 	{
-		Detail =new BFSDetial;
-		Detail->length = strlen(String);
-		Detail->ReferCount = 1;
-		try
-		{
-			Detail->String = new char[Detail->length+1];
-			strcpy(Detail->String, String);
-		}
-		catch (std::bad_alloc e)
-		{
-			throw BFException(ERR_MEMORYALLOCATEDEXCEPTION,"Îª×Ö·û´®(BFString::String)·ÖÅäÄÚ´æÊ±Ê§°Ü",EXCEPTION_DETAIL);
-		}
-	}
-	catch (std::bad_alloc)
-	{
-		delete Detail;
-		throw BFException(ERR_MEMORYALLOCATEDEXCEPTION, "Îª×Ö·û´®(BFString)·ÖÅäÄÚ´æÊ±Ê§°Ü", EXCEPTION_DETAIL);
-	}
-	catch (BFException e)
-	{
-		throw e;
-	}
-}
-
-BFString::BFString(const char * String,size_t length)
-{
-	try
-	{
 		Detail = new BFSDetial;
-		Detail->length = length;
+		Detail->length = strlen(String);
 		Detail->ReferCount = 1;
 		try
 		{
 			Detail->String = new char[Detail->length + 1];
 			strcpy(Detail->String, String);
 		}
-		catch (std::bad_alloc e)
+		catch (std::bad_alloc)
 		{
 			throw BFException(ERR_MEMORYALLOCATEDEXCEPTION, "Îª×Ö·û´®(BFString::String)·ÖÅäÄÚ´æÊ±Ê§°Ü", EXCEPTION_DETAIL);
 		}
@@ -51,9 +23,37 @@ BFString::BFString(const char * String,size_t length)
 		delete Detail;
 		throw BFException(ERR_MEMORYALLOCATEDEXCEPTION, "Îª×Ö·û´®(BFString)·ÖÅäÄÚ´æÊ±Ê§°Ü", EXCEPTION_DETAIL);
 	}
-	catch (BFException e)
+	catch (BFException &e)
 	{
-		throw e;
+		throw BFException(e);
+	}
+}
+
+BFString::BFString(const char * String, size_t length)
+{
+	try
+	{
+		Detail = new BFSDetial();
+		Detail->length = length;
+		Detail->ReferCount = 1;
+		try
+		{
+			Detail->String = new char[Detail->length + 1];
+			strcpy(Detail->String, String);
+		}
+		catch (std::bad_alloc)
+		{
+			throw BFException(ERR_MEMORYALLOCATEDEXCEPTION, "Îª×Ö·û´®(BFString::String)·ÖÅäÄÚ´æÊ±Ê§°Ü", EXCEPTION_DETAIL);
+		}
+	}
+	catch (std::bad_alloc)
+	{
+		delete Detail;
+		throw BFException(ERR_MEMORYALLOCATEDEXCEPTION, "Îª×Ö·û´®(BFString)·ÖÅäÄÚ´æÊ±Ê§°Ü", EXCEPTION_DETAIL);
+	}
+	catch (BFException &e)
+	{
+		throw BFException(e);
 	}
 }
 
@@ -78,7 +78,7 @@ char * BFString::c_str()
 	return Detail->String;
 }
 
-std::ostream& operator<<(std::ostream &os,BFString &Source)
+std::ostream& operator<<(std::ostream &os, BFString &Source)
 {
 	os << Source.Detail->String;
 	return os;

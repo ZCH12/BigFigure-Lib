@@ -95,7 +95,7 @@ BigFigure::~BigFigure()
 */
 BigFigure& BigFigure::Expand(size_t IntSize, size_t FloatSize)
 {
-	char *temp;			//新的内存空间
+	char *temp;								//新的内存空间
 
 	int AllocatedMem;
 	if (IntSize == 0)
@@ -110,7 +110,7 @@ BigFigure& BigFigure::Expand(size_t IntSize, size_t FloatSize)
 		temp = new char[AllocatedMem];
 		temp[IntSize] = 0;				//写入中间的'\0'
 		if (IntSize >= Detail->LenInt)
-			strncpy(temp + IntSize - Detail->LenInt, Detail->pSInt, Detail->LenInt);//小数部分安全得进行复制
+			strncpy(temp + IntSize - Detail->LenInt, Detail->pSInt, Detail->LenInt);//整数部分安全得进行复制
 		else
 		{
 			//整数部分将会被截断
@@ -361,7 +361,7 @@ BigFigure& BigFigure::toBF(NumStringDetail &NumStringDetail)
 					throw BFException(ERR_MAYACCURACYLOSS, "传入的值小数位过多,将丢失精度", EXCEPTION_DETAIL);
 			}
 		}
-		catch (BFException e)
+		catch (BFException &e)
 		{
 			switch (e.GetID())
 			{
@@ -375,7 +375,7 @@ BigFigure& BigFigure::toBF(NumStringDetail &NumStringDetail)
 				}
 			default:
 				Detail->Legal = false;
-				throw e;
+				throw BFException(e);
 			}
 		}
 
