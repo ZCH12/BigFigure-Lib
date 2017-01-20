@@ -11,40 +11,33 @@
 #include <iostream>
 #include <climits>
 
+void testTime()
+{
+	clock_t t1 = clock();
+	/********************************************************/
+
+	BF a(100, 100), b(100, 120), c(3, 100);
+
+	a = "10000000000000000000000000000000000000000000000000000000000000000000000";
+	b = "978916123132123515315641231561212315351321513132313265564561451515515";
+	for (int i = 0; i < 100000000; i++)
+		core_IntSub(c, a, b, 0);
+
+	/********************************************************/
+	std::cout << clock() - t1 << std::endl;
+}
+
+
+
 
 
 int main()
 {
-	BF a(10, 10), b(100, 12), c(100, 10);
-	a = "123E100";
-	b = "123456789.232323";
-	void test(BigFigure & result, const BigFigure & OperandA, long long OperandB, int carry);
-	test(c, b, 9, 0);
-	//std::cout << a << std::endl;
-
-	//c = "9999999909";
-	/*
-	core_IntAdd(c, a, b, 0);
-	std::cout << c << std::endl;
-	
-	core_IntAdd(c, c, b, 0);
-	std::cout << c << std::endl;
-
-	core_IntAdd(c, c, b, 0);
-	*/
-	//ºÄÊ±5747
-	/*
-	clock_t t2 = clock();
-	long long ssd = 1;
-	for (int i = 0; i < 100000000; i++)
-	{
-		core_IntAdd(c, b, c, 0);
-		//ssd += 4560000;
-		std::cout << c << std::endl;
-	}
-
-	std::cout << clock() - t2 << std::endl;
-	*/
+	BF a(100, 100), b(100, 120), c(3, 100);
+	a = "10000000000000";
+	b = "9";
+	std::cout << core_IntSub(c, a, b, 0) << std::endl;
+	testTime();
 	std::cout << c << std::endl;
 	system("pause");
 }
