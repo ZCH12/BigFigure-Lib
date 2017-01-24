@@ -324,9 +324,9 @@ BigFigure& BigFigure::toBF(NumStringDetail &NumStringDetail)
 			else {
 				//整数部分为0
 				index_p = NumStringDetail.FloatLen;
-				skip = (int)index_p;															//初始化跳过的为
+				skip = (int)index_p;													//初始化跳过的为
 				while (*(SourceStr) == '0')SourceStr++, index_p--;						//跳过数字前边的0
-				skip = ~(skip - (int)index_p + 1) + 1;										//取得跳过的有效位的位数再取相反数
+				skip = ~(skip - (int)index_p + 1) + 1;									//取得跳过的有效位的位数再取相反数
 				strncpy(tempStr, SourceStr, index_p);									//复制有效数字
 				while (index_p != 0 && tempStr[index_p] == '0')index_p--;				//去除末尾的0
 				tempStr[index_p++] = 0;
@@ -395,7 +395,7 @@ BigFigure& BigFigure::toBF(NumStringDetail &NumStringDetail)
 				//进行截断性复制
 				Detail->pSInt = Detail->DataHead;
 				Detail->LenInt = Detail->AllocInt;
-				temp = expon - (int)Detail->AllocInt;							//忽略的位数
+				temp = expon - (int)Detail->AllocInt;						//忽略的位数
 				strcpy(Detail->pSInt, tempStr + temp);
 				memset(Detail->pSInt + size - temp - 1, '0', Detail->AllocInt - (size - temp));
 			}
@@ -405,7 +405,7 @@ BigFigure& BigFigure::toBF(NumStringDetail &NumStringDetail)
 				{
 					temp = (int)(size - Detail->LenInt);
 					if (temp > 0)
-						strncpy(Detail->pSFloat, tempStr + Detail->LenInt, temp);	//写入小数位
+						strncpy(Detail->pSFloat, tempStr + Detail->LenInt, temp);			//写入小数位
 					else
 						temp = 0;
 					Detail->pSFloat[temp] = 0;
@@ -424,7 +424,7 @@ BigFigure& BigFigure::toBF(NumStringDetail &NumStringDetail)
 			Detail->pSInt = Detail->pSRP - 1;
 			Detail->pSInt[0] = '0';
 			Detail->LenInt = 1;
-			index_p = ~expon;//~expon+1-1				//计算前置输出的0的个数
+			index_p = ~expon;//~expon+1-1													//计算前置输出的0的个数
 			memset(Detail->pSFloat, '0', index_p);
 
 			if (Detail->AllocFloat)
@@ -517,7 +517,7 @@ BigFigure & BigFigure::CopyDetail(const BigFigure & Source)
 	if (this->Detail->AllocInt >= Source.Detail->LenInt)
 	{
 		//空间足够复制,进行复制
-		this->Detail->pSInt = this->Detail->pSRP - Source.Detail->LenInt;	//找到写入位置
+		this->Detail->pSInt = this->Detail->pSRP - Source.Detail->LenInt;			//找到写入位置
 		this->Detail->LenInt = Source.Detail->LenInt;
 		strcpy(this->Detail->pSInt, Source.Detail->pSInt);
 	}
@@ -526,8 +526,8 @@ BigFigure & BigFigure::CopyDetail(const BigFigure & Source)
 		//截断性复制
 		this->Detail->pSInt = this->Detail->DataHead;
 		strncpy(this->Detail->pSInt, Source.Detail->pSInt + Source.Detail->LenInt - this->Detail->AllocInt, this->Detail->AllocInt);
-		while (this->Detail->pSInt[0] == '0')this->Detail->pSInt++;			//去除整数前面的0
-		this->Detail->LenInt = this->Detail->pSRP - this->Detail->pSInt;	//计算整数的长度
+		while (this->Detail->pSInt[0] == '0')this->Detail->pSInt++;					//去除整数前面的0
+		this->Detail->LenInt = this->Detail->pSRP - this->Detail->pSInt;			//计算整数的长度
 	}
 	if (Source.Detail->LenFloat)
 	{
@@ -587,7 +587,7 @@ char* BigFigure::_toString(size_t &length, bool UseScinotation, bool ReserveZero
 		if (UseScinotation)
 		{
 			//使用科学计数法输出
-			if (Detail->pSInt[0] == '0' && Detail->LenInt == 1)
+			if (Detail->LenInt == 1 && Detail->pSInt[0] == '0')
 			{
 				//整数部分数据为0
 				r_index = 0;

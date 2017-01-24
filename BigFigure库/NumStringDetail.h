@@ -24,7 +24,7 @@ private:
 	size_t ExpLen;			//指数部分的长度
 	size_t ExpStart_p;		//指数的起始下标
 	char* NumString;		//保存的字符串信息
-	void NumStringDetail::NumCheck(const char * NumString);
+	inline void NumStringDetail::NumCheck(const char * NumString);
 public:
 	NumStringDetail(const char * NumString);
 	NumStringDetail(double Num);

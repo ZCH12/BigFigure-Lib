@@ -55,31 +55,30 @@ template <typename T> size_t _CountBits(T Num)
 	return size;
 }
 
-
-
-
 /*
 该函数是BF整数加法核心,没有正负判断,纯粹地按位相加
 @param result 存储结果的对象
 @param OperandA 操作数A
+@param LengthA 操作数A的长度
 @param OperandB 操作数B
+@param LengthB 操作数B的长度
 @param carry 是否进位(该值只允许为1或0)
 @return result
 */
-BigFigure& core_IntAdd(BigFigure & result, const BigFigure & OperandA, const BigFigure & OperandB, int carry)
+BigFigure& core_IntAdd(BigFigure & result, const char * OperandA, size_t LengthA, const char* OperandB, size_t LengthB, int carry)
 {
 	//判断内存是否足够
 	int buffer;										//计算时的缓冲区
 	int offsetA = 0, offsetB = 0;
 
 
-	if (OperandA.Detail->LenInt >= result.Detail->AllocInt)
+	if (LengthA >= result.Detail->AllocInt)
 	{
 		//内存不足以存放,准备报错
 		if (AutoExpand)
 		{
 			//对空间进行拓展
-			size_t temp1 = OperandA.Detail->LenInt >= OperandB.Detail->LenInt ? OperandA.Detail->LenInt : OperandB.Detail->LenInt;
+			size_t temp1 = LengthA >= LengthB ? LengthA : LengthB;
 			result.Expand((temp1 > result.Detail->AllocInt ? temp1 : result.Detail->AllocInt) + 1,
 				result.Detail->AllocFloat);
 		}
@@ -90,16 +89,16 @@ BigFigure& core_IntAdd(BigFigure & result, const BigFigure & OperandA, const Big
 			else
 			{
 				//进行截断(截去高位),注意,截断之后的数字跟之前不同
-				offsetA = (int)(OperandA.Detail->LenInt - result.Detail->AllocInt);
+				offsetA = (int)(LengthA - result.Detail->AllocInt);
 			}
 		}
 	}
-	if (OperandB.Detail->LenInt >= result.Detail->AllocInt)
+	if (LengthB >= result.Detail->AllocInt)
 	{
 		if (AutoExpand)
 		{
 			//对空间进行拓展
-			result.Expand((OperandB.Detail->LenInt >= result.Detail->AllocInt ? OperandB.Detail->LenInt : result.Detail->AllocInt) + 1,
+			result.Expand((LengthB >= result.Detail->AllocInt ? LengthB : result.Detail->AllocInt) + 1,
 				result.Detail->AllocFloat);
 		}
 		else
@@ -110,17 +109,17 @@ BigFigure& core_IntAdd(BigFigure & result, const BigFigure & OperandA, const Big
 			else
 			{
 				//进行截断(截去高位),注意,截断之后的数字跟之前不同
-				offsetB = (int)(OperandB.Detail->LenInt - result.Detail->AllocInt);
+				offsetB = (int)(LengthB - result.Detail->AllocInt);
 			}
 		}
 
 	}
 
-	char *StringAH = OperandA.Detail->pSInt + offsetA,	//字符串A的首指针
-		*StringAT = OperandA.Detail->pSRP - 1,			//字符串的尾指针,也是写入位置
-		*StringBH = OperandB.Detail->pSInt + offsetB,	//字符串B的首指针
-		*StringBT = OperandB.Detail->pSRP - 1,			//字符串B的尾指针,也是写入位置
-		*StringRH = result.Detail->DataHead,
+	const char *StringAH = OperandA + offsetA,				//字符串A的首指针
+		*StringAT = OperandA + LengthA - 1,			//字符串的尾指针,也是写入位置
+		*StringBH = OperandB + offsetB,				//字符串B的首指针
+		*StringBT = OperandB + LengthB - 1;			//字符串B的尾指针,也是写入位置
+	char *StringRH = result.Detail->DataHead,
 		*StringRT = result.Detail->pSRP - 1;
 
 
@@ -205,195 +204,24 @@ BigFigure& core_IntAdd(BigFigure & result, const BigFigure & OperandA, const Big
 	}
 	return result;
 }
-//BF加基本数字的模板,只能用于整数加整数,如果是浮点数,请先转换为BF然后调用core_IntAdd进行计算,此函数只进行整数部分的处理,如果是一个小数加上此基本数据,还需要调用core_FloatCopy来复制小数部分到result
 /*
+该函数是BF整数减法法核心, 没有正负判断, 纯粹地按位相减
 @param result 存储结果的对象
 @param OperandA 操作数A
-@param OperandB 操作数B(基本数据类型)
+@param LengthA 操作数A的长度
+@param OperandB 操作数B
+@param LengthB 操作数B的长度
 @param carry 是否进位(该值只允许为1或0)
 @return result
 */
-template <class T>BigFigure& core_IntAdd_Basis(BigFigure & result, const BigFigure & OperandA, T OperandB, int carry)
-{
-	int buffer = 0;											//计算时的缓冲区
-
-	if (OperandA.Detail->LenInt >= result.Detail->AllocInt || (size_t)(buffer = (int)_CountBits<T>(OperandB)) >= result.Detail->AllocInt)
-	{
-		//一定不够内存
-		if (AutoExpand)
-		{
-			if (buffer)
-				result.Expand((result.Detail->AllocInt > (size_t)buffer ? result.Detail->AllocInt : (size_t)buffer) + 2
-					, result.Detail->AllocFloat);
-			else
-			{
-				size_t temp = (result.Detail->AllocInt > OperandA.Detail->LenInt ? result.Detail->AllocInt : OperandA.Detail->LenInt) + 2;
-				result.Expand(temp > 32 ? temp : 32, result.Detail->AllocFloat);
-			}
-		}
-		else {
-			if (ConfirmWontLossHighBit)
-			{
-				throw BFException(ERR_MAYACCURACYLOSS, "结果无法保存到result中", EXCEPTION_DETAIL);
-			}
-		}
-	}
-	char *StringRH = result.Detail->DataHead,
-		*StringRT = result.Detail->pSRP - 1,
-		*StringAH = OperandA.Detail->pSInt,
-		*StringAT = OperandA.Detail->pSRP - 1;
-
-	while (StringRH <= StringRT&&StringAH <= StringAT)
-	{
-		buffer = *(StringAT--) + OperandB % 10 + carry;
-		OperandB /= 10;
-		if (buffer > '9')
-		{
-			buffer -= 10;
-			carry = 1;
-		}
-		else
-		{
-			carry = 0;
-		}
-		*(StringRT--) = (char)buffer;
-	}
-
-	if (OperandB != 0)
-	{
-		while (carry&&StringRH <= StringRT&&OperandB != 0)
-		{
-			buffer = OperandB % 10 + carry;
-			OperandB /= 10;
-			if (buffer > 9)
-			{
-				buffer += 38;
-				carry = 1;
-			}
-			else
-			{
-				buffer += '0';
-				carry = 0;
-			}
-			*(StringRT--) = (char)buffer;
-		}
-		while (StringRH <= StringRT&&OperandB != 0)
-		{
-			*(StringRT--) = OperandB % 10 + '0';
-			OperandB /= 10;
-		}
-	}
-	if (carry&&StringRH <= StringRT)
-		*(StringRT) = '1';
-	else
-		StringRT++;
-
-
-	if (OperandB)
-	{
-		if (ConfirmWontLossHighBit)
-		{
-			result.Detail->Legal = false;
-			throw BFException(ERR_NUMBERTOOBIG, "数字太大无法存储", EXCEPTION_DETAIL);
-		}
-	}
-
-	result.Detail->LenInt = result.Detail->pSRP - StringRT;
-	result.Detail->pSInt = StringRT;
-	result.Detail->Legal = true;
-	return result;
-}
-
-int core_FloatAdd(BigFigure & result, const BigFigure & OperandA, const BigFigure & OperandB)
-{
-	if (OperandA.Detail->LenFloat > result.Detail->AllocFloat || OperandB.Detail->LenFloat > result.Detail->AllocFloat)
-	{
-		//内存不足,需要进行重新分配内存
-		if (AutoExpand)
-		{
-			//进行自动拓展
-			result.Expand(result.Detail->AllocInt, OperandA.Detail->LenFloat > OperandB.Detail->LenFloat ? OperandA.Detail->LenFloat : OperandB.Detail->LenFloat);
-		}
-		else if (ConfirmWontLossAccuracy)
-		{
-			if (OperandA.Detail->LenFloat > result.Detail->AllocFloat)
-			{
-				result.Detail->Legal = false;
-				throw BFException(ERR_MAYACCURACYLOSS, "操作数A的小数位太多,无法全部保存到result中", EXCEPTION_DETAIL);
-			}
-			else
-			{
-				result.Detail->Legal = false;
-				throw BFException(ERR_MAYACCURACYLOSS, "操作数B的小数位太多,无法全部保存到result中", EXCEPTION_DETAIL);
-			}
-		}
-	}
-
-
-	char *StringRH = result.Detail->pSFloat,
-		*StringRT,
-		*StringAH = OperandA.Detail->pSFloat,
-		*StringAT,
-		*StringBH = OperandB.Detail->pSFloat,
-		*StringBT,
-		*StringTemp;
-
-
-	{
-		size_t temp = OperandA.Detail->LenFloat > OperandB.Detail->LenFloat ? OperandA.Detail->LenFloat : OperandB.Detail->LenFloat;		//取得最长的小数
-		temp = temp < result.Detail->AllocFloat ? temp : result.Detail->AllocFloat;							//取得一个最大的下标
-		StringRT = StringRH + temp;																			//计算小数的最后的写入位置
-		*StringRT-- = 0;
-		result.Detail->LenFloat = temp;
-		StringAT = StringAH + (temp < OperandA.Detail->LenFloat ? temp : OperandA.Detail->LenFloat) - 1;	//计算A的最后一个读取位置
-		StringBT = StringBH + (temp < OperandB.Detail->LenFloat ? temp : OperandB.Detail->LenFloat) - 1;	//计算B的最后一个读取位置
-	}
-
-	if (OperandA.Detail->LenFloat > OperandB.Detail->LenFloat)						//拷贝多出的位
-	{
-		//A比较长
-		StringTemp = StringAT - (OperandA.Detail->LenFloat - OperandB.Detail->LenFloat) + 1;
-		while (StringTemp <= StringAT&&StringRH <= StringRT)
-			*StringRT-- = *StringAT--;
-	}
-	else if (OperandA.Detail->LenFloat < OperandB.Detail->LenFloat)
-	{
-		//B比较长
-		StringTemp = StringBT - (OperandB.Detail->LenFloat - OperandA.Detail->LenFloat) + 1;
-		while (StringTemp <= StringBT&&StringRH <= StringRT)
-			*StringRT-- = *StringBT--;
-	}
-
-	int carry = 0;
-	int buffer;
-	//开始拷贝有重合位的部分
-
-	while (StringRH <= StringRT&&StringAH <= StringAT&&StringBH <= StringBT)
-	{
-		buffer = *(StringBT--) + *(StringAT--) + carry;
-		if (buffer >= CONST_OVER9)
-		{
-			buffer -= 58;
-			carry = 1;
-		}
-		else {
-			buffer -= '0';
-			carry = 0;
-		}
-		*(StringRT--) = (char)buffer;
-	}
-	result.Detail->Legal = true;
-	return (int)carry;
-}
-
-BigFigure& core_IntSub(BigFigure & result, const BigFigure & OperandA, const BigFigure & OperandB, int borrow)
+BigFigure& core_IntSub(BigFigure & result, const char* OperandA, size_t LengthA, const char* OperandB, size_t LengthB, int borrow)
 {
 	//判断内存是否足够
 	int buffer;										//计算时的缓冲区
 	int offsetA = 0, offsetB = 0;
 	int ExtraSize;
 
-	if (OperandA.Detail->LenInt >= result.Detail->AllocInt)
+	if (LengthA >= result.Detail->AllocInt)
 	{
 		//内存不足以存放,准备报错
 		if (!AutoExpand)
@@ -403,11 +231,11 @@ BigFigure& core_IntSub(BigFigure & result, const BigFigure & OperandA, const Big
 			else
 			{
 				//进行截断(截去高位),注意,截断之后的数字跟之前不同
-				offsetA = (int)(OperandA.Detail->LenInt - result.Detail->AllocInt);
+				offsetA = (int)(LengthA - result.Detail->AllocInt);
 			}
 		}
 	}
-	if (OperandB.Detail->LenInt >= result.Detail->AllocInt)
+	if (LengthB >= result.Detail->AllocInt)
 	{
 		if (!AutoExpand)
 		{
@@ -416,23 +244,23 @@ BigFigure& core_IntSub(BigFigure & result, const BigFigure & OperandA, const Big
 			else
 			{
 				//进行截断(截去高位),注意,截断之后的数字跟之前不同
-				offsetB = (int)(OperandB.Detail->LenInt - result.Detail->AllocInt);
+				offsetB = (int)(LengthB - result.Detail->AllocInt);
 			}
 		}
 	}
 
-	char *StringAH = OperandA.Detail->pSInt + offsetA,	//字符串A的首指针
-		*StringAT = OperandA.Detail->pSRP - 1,			//字符串的尾指针,也是写入位置
-		*StringBH = OperandB.Detail->pSInt + offsetB,	//字符串B的首指针
-		*StringBT = OperandB.Detail->pSRP - 1,			//字符串B的尾指针,也是写入位置
-		*StringRH = result.Detail->DataHead,
+	const char *StringAH = OperandA + offsetA,				//字符串A的首指针
+		*StringAT = OperandA + LengthA - 1,			//字符串的尾指针,也是写入位置
+		*StringBH = OperandB + offsetB,				//字符串B的首指针
+		*StringBT = OperandB + LengthB - 1;			//字符串B的尾指针,也是写入位置
+	char *StringRH = result.Detail->DataHead,
 		*StringRT = result.Detail->pSRP - 1,
-		*StringEH, *StringET;							//额外的结果缓冲区的指针
+		*StringEH, *StringET;								//额外的结果缓冲区的指针
 	if (AutoExpand)
 	{
-		if (OperandA.Detail->LenInt > result.Detail->AllocInt || OperandB.Detail->LenInt > result.Detail->AllocInt)
+		if (LengthA > result.Detail->AllocInt || LengthB > result.Detail->AllocInt)
 		{
-			ExtraSize = (OperandA.Detail->LenInt > OperandB.Detail->LenInt ? OperandA.Detail->LenInt : OperandB.Detail->LenInt) - result.Detail->AllocInt;
+			ExtraSize = (LengthA > LengthB ? LengthA : LengthB) - result.Detail->AllocInt;
 			if (ExtraSize <= (int)ExtraBufferSize)
 			{
 				ExtraSize = (int)ExtraBufferSize;
@@ -554,84 +382,186 @@ BigFigure& core_IntSub(BigFigure & result, const BigFigure & OperandA, const Big
 	result.Detail->Legal = true;
 	return result;
 }
+
 /*
-template <class T>BigFigure& core_IntSub_Basis(BigFigure & result, const BigFigure & OperandA, T OperandB, int borrow)
+该函数是BF小数加法核心,没有正负判断,纯粹地按位相加
+@param result 存储结果的对象
+@param OperandA 操作数A
+@param LengthA 操作数A的长度
+@param OperandB 操作数B
+@param LengthB 操作数B的长度
+@return result
+*/
+int core_FloatAdd(BigFigure & result, const char * OperandA, size_t LengthA, const char* OperandB, size_t LengthB)
 {
-
-
-
-	return result;
-}
-int core_FloatSub(BigFigure & result, const BigFigure & OperandA, const BigFigure & OperandB)
-{
-	//分两种情况
-	//1.A比B长
-	//2.A比B短
-	int borrow = 0;
-	char *String1 = OperandA.Detail->NumFloat, *String2 = OperandB.Detail->NumFloat;
-	int index_A = strlen(String1), index_B = strlen(String2);
-	int buffer;
-	int index_r = index_A > index_B ? index_A : index_B;
-	char *String3 = new char[index_r + 1];
-	String3[index_r--] = 0;
-
-	//先处理长度不相等的部分
-	if (index_A > index_B)
+	if (LengthA > result.Detail->AllocFloat || LengthB > result.Detail->AllocFloat)
 	{
-		//如果长度A>B
-		strncpy(String3 + index_B, String1 + index_B, index_A - index_B);	//将多出的位复制下来
-		index_A = index_B - 1;
-	}
-	else if (index_A < index_B)
-	{
-		//如果长度B>A
-		index_A--;
-		index_B--;
-		while (index_B > index_A)
+		//内存不足,需要进行重新分配内存
+		if (AutoExpand)
 		{
-			String3[index_B] = (char)(106 - String2[index_B] - borrow);
-			borrow = 1;
-			index_B--;
+			//进行自动拓展
+			result.Expand(result.Detail->AllocInt, LengthA > LengthB ? LengthA : LengthB);
+		}
+		else if (ConfirmWontLossAccuracy)
+		{
+			if (LengthA > result.Detail->AllocFloat)
+			{
+				result.Detail->Legal = false;
+				throw BFException(ERR_MAYACCURACYLOSS, "操作数A的小数位太多,无法全部保存到result中", EXCEPTION_DETAIL);
+			}
+			else
+			{
+				result.Detail->Legal = false;
+				throw BFException(ERR_MAYACCURACYLOSS, "操作数B的小数位太多,无法全部保存到result中", EXCEPTION_DETAIL);
+			}
 		}
 	}
 
-	//处理长度相等的部分
-	while (index_A >= 0)
+
+	char *StringRH = result.Detail->pSFloat,
+		*StringRT;
+	const char 	*StringAH = OperandA,
+		*StringAT,
+		*StringBH = OperandB,
+		*StringBT,
+		*StringTemp;
+
+
 	{
-		buffer = (int)String1[index_A] - String2[index_A] - borrow;
+		size_t temp = LengthA > LengthB ? LengthA : LengthB;							//取得最长的小数
+		temp = temp < result.Detail->AllocFloat ? temp : result.Detail->AllocFloat;		//取得一个最大的下标
+		StringRT = StringRH + temp;														//计算小数的最后的写入位置
+		*StringRT-- = 0;
+		result.Detail->LenFloat = temp;
+		StringAT = StringAH + (temp < LengthA ? temp : LengthA) - 1;					//计算A的最后一个读取位置
+		StringBT = StringBH + (temp < LengthB ? temp : LengthB) - 1;					//计算B的最后一个读取位置
+	}
+
+	if (LengthA > LengthB)						//拷贝多出的位
+	{
+		//A比较长
+		StringTemp = StringAT - (LengthA - LengthB) + 1;
+		while (StringTemp <= StringAT&&StringRH <= StringRT)
+			*StringRT-- = *StringAT--;
+	}
+	else if (LengthA < LengthB)
+	{
+		//B比较长
+		StringTemp = StringBT - (LengthB - LengthA) + 1;
+		while (StringTemp <= StringBT&&StringRH <= StringRT)
+			*StringRT-- = *StringBT--;
+	}
+
+	int carry = 0;
+	int buffer;
+	//开始拷贝有重合位的部分
+
+	while (StringRH <= StringRT&&StringAH <= StringAT&&StringBH <= StringBT)
+	{
+		buffer = *(StringBT--) + *(StringAT--) + carry;
+		if (buffer >= CONST_OVER9)
+		{
+			buffer -= 58;
+			carry = 1;
+		}
+		else {
+			buffer -= '0';
+			carry = 0;
+		}
+		*(StringRT--) = (char)buffer;
+	}
+	result.Detail->Legal = true;
+	return (int)carry;
+}
+/*
+该函数是BF小数减法核心,没有正负判断,纯粹地按位相减
+@param result 存储结果的对象
+@param OperandA 操作数A
+@param LengthA 操作数A的长度
+@param OperandB 操作数B
+@param LengthB 操作数B的长度
+@return result
+*/
+int core_FloatSub(BigFigure & result, const char * OperandA, size_t LengthA, const char* OperandB, size_t LengthB)
+{
+	if (LengthA > result.Detail->AllocFloat || LengthB > result.Detail->AllocFloat)
+	{
+		//内存不足,需要进行重新分配内存
+		if (AutoExpand)
+		{
+			//进行自动拓展
+			result.Expand(result.Detail->AllocInt, LengthA > LengthB ? LengthA : LengthB);
+		}
+		else if (ConfirmWontLossAccuracy)
+		{
+			if (LengthA > result.Detail->AllocFloat)
+			{
+				result.Detail->Legal = false;
+				throw BFException(ERR_MAYACCURACYLOSS, "操作数A的小数位太多,无法全部保存到result中", EXCEPTION_DETAIL);
+			}
+			else
+			{
+				result.Detail->Legal = false;
+				throw BFException(ERR_MAYACCURACYLOSS, "操作数B的小数位太多,无法全部保存到result中", EXCEPTION_DETAIL);
+			}
+		}
+	}
+
+	char	*StringRH = result.Detail->pSFloat,
+		*StringRT;
+	const char	*StringAH = OperandA,
+		*StringAT,
+		*StringBH = OperandB,
+		*StringBT,
+		*StringTemp;
+	int buffer;
+	int borrow = 0;
+
+	{
+		//找到公共的读取位置
+		size_t temp = LengthA > LengthB ? LengthA : LengthB;		//取得最长的小数
+		temp = temp < result.Detail->AllocFloat ? temp : result.Detail->AllocFloat;							//取得一个最大的下标
+		StringRT = StringRH + temp;																			//计算小数的最后的写入位置
+		*StringRT-- = 0;
+		result.Detail->LenFloat = temp;
+		StringAT = StringAH + (temp < LengthA ? temp : LengthA) - 1;	//计算A的最后一个读取位置
+		StringBT = StringBH + (temp < LengthB ? temp : LengthB) - 1;	//计算B的最后一个读取位置
+	}
+
+
+	if (LengthA > LengthB)
+	{
+		StringTemp = StringAT - (LengthA - LengthB) + 1;
+		while (StringTemp <= StringAT&&StringRH <= StringRT)
+			*StringRT-- = *StringAT--;
+	}
+	else if (LengthA < LengthB)
+	{
+		StringTemp = StringBT - (LengthB - LengthA) + 1;
+		while (StringTemp <= StringBT&&StringRH <= StringRT)
+		{
+			*(StringRT--) = CONST_OVER9 - *(StringBT--) - borrow;
+			borrow = 1;
+		}
+	}
+
+	while (StringRH <= StringRT&&StringAH <= StringAT&&StringBH <= StringBT)
+	{
+		buffer = *(StringAT--) - *(StringBT--) - borrow;
 		if (buffer < 0)
 		{
-			//需要借位
 			buffer += 58;
 			borrow = 1;
 		}
-		else
-		{
+		else {
 			buffer += '0';
 			borrow = 0;
 		}
-		String3[index_A--] = (char)buffer;
+		*(StringRT--) = (char)buffer;
 	}
-
-	while (String3[index_r] == '0')
-		index_r--;
-	String3[++index_r] = 0;
-
-	if (index_r > (int)result.Detail->Accuracy&&ConfirmWontLossAccuracy)
-	{
-		result.Detail->Illage = true;
-		throw BFException(ERR_MAYACCURACYLOSS, "result容量不足以存放小数");
-	}
-
-	result.Detail->Illage = false;
-	strncpy(result.Detail->NumFloat, String3, result.Detail->Accuracy);
-
-	delete[] String3;
-	return borrow;
+	result.Detail->Legal = true;
+	return (int)borrow;
 }
-
-*/
-
 
 
 
@@ -670,15 +600,205 @@ BigFigure& core_FloatCopy(BigFigure &result, const BigFigure &OperandA)
 	return result;
 }
 
-void test(BigFigure & result, const BigFigure & OperandA, long long OperandB, int carry)
+BigFigure & BFAdd(BigFigure & result, const BigFigure OperandA, const BigFigure & OperandB)
 {
-	core_IntAdd_Basis<long long>(result, OperandA, OperandB, 0);
-	core_FloatCopy(result, OperandA);
+	bool minusA = OperandA.Detail->Minus, minusB = OperandB.Detail->Minus;
+
+	if (!(minusA || minusB))
+	{
+		//正正相加
+		core_IntAdd(result, OperandA.Detail->pSInt, OperandA.Detail->LenInt, OperandB.Detail->pSInt, OperandB.Detail->LenInt, core_FloatAdd(result, OperandA.Detail->pSFloat, OperandA.Detail->LenFloat, OperandB.Detail->pSFloat, OperandB.Detail->LenFloat));
+		result.Detail->Minus = false;
+	}
+	else if (minusA && !minusB)
+	{
+		//负正相加
+		if (BFCmp_abs(OperandA, OperandB, 1) > 0)
+		{
+			//-5+3=-2
+			core_IntSub(result, OperandA.Detail->pSInt, OperandA.Detail->LenInt, OperandB.Detail->pSInt, OperandB.Detail->LenInt, core_FloatSub(result, OperandA.Detail->pSFloat, OperandA.Detail->LenFloat, OperandB.Detail->pSFloat, OperandB.Detail->LenFloat));
+			result.Detail->Minus = true;
+		}
+		else
+		{
+			//-2+5=3
+			core_IntSub(result, OperandB.Detail->pSInt, OperandB.Detail->LenInt, OperandA.Detail->pSInt, OperandA.Detail->LenInt, core_FloatSub(result, OperandB.Detail->pSFloat, OperandB.Detail->LenFloat, OperandA.Detail->pSFloat, OperandA.Detail->LenFloat));
+			result.Detail->Minus = false;
+		}
+	}
+	else if (!minusA&&minusB)
+	{
+		//正负相加
+		if (BFCmp_abs(OperandA, OperandB, 1) >= 0)
+		{
+			//5-3=2
+			core_IntSub(result, OperandA.Detail->pSInt, OperandA.Detail->LenInt, OperandB.Detail->pSInt, OperandB.Detail->LenInt, core_FloatSub(result, OperandA.Detail->pSFloat, OperandA.Detail->LenFloat, OperandB.Detail->pSFloat, OperandB.Detail->LenFloat));
+			result.Detail->Minus = false;
+		}
+		else
+		{
+			//2-5=-3
+			core_IntSub(result, OperandB.Detail->pSInt, OperandB.Detail->LenInt, OperandA.Detail->pSInt, OperandA.Detail->LenInt, core_FloatSub(result, OperandB.Detail->pSFloat, OperandB.Detail->LenFloat, OperandA.Detail->pSFloat, OperandA.Detail->LenFloat));
+			result.Detail->Minus = true;
+		}
+	}
+	else {
+		//负负相加
+		core_IntAdd(result, OperandA.Detail->pSInt, OperandA.Detail->LenInt, OperandB.Detail->pSInt, OperandB.Detail->LenInt, core_FloatAdd(result, OperandA.Detail->pSFloat, OperandA.Detail->LenFloat, OperandB.Detail->pSFloat, OperandB.Detail->LenFloat));
+		result.Detail->Minus = true;
+	}
+	return result;
 }
 
+BigFigure & BFSub(BigFigure & result, const BigFigure OperandA, const BigFigure & OperandB)
+{
+	bool minusA = OperandA.Detail->Minus, minusB = OperandB.Detail->Minus;
+
+	if (!(minusA || minusB))
+	{
+		//正正相减
+		if (BFCmp_abs(OperandA, OperandB, 1) >= 0)
+		{
+			//5-1=4
+			core_IntSub(result, OperandA.Detail->pSInt, OperandA.Detail->LenInt, OperandB.Detail->pSInt, OperandB.Detail->LenInt, core_FloatSub(result, OperandA.Detail->pSFloat, OperandA.Detail->LenFloat, OperandB.Detail->pSFloat, OperandB.Detail->LenFloat));
+			result.Detail->Minus = false;
+		}
+		else
+		{
+			//5-6=-1
+			core_IntSub(result, OperandB.Detail->pSInt, OperandB.Detail->LenInt, OperandA.Detail->pSInt, OperandA.Detail->LenInt, core_FloatSub(result, OperandB.Detail->pSFloat, OperandB.Detail->LenFloat, OperandA.Detail->pSFloat, OperandA.Detail->LenFloat));
+			result.Detail->Minus = true;
+		}
+	}
+	else if (minusA && !minusB)
+	{
+		//负正相减
+		//-5-9=-14
+		core_IntAdd(result, OperandA.Detail->pSInt, OperandA.Detail->LenInt, OperandB.Detail->pSInt, OperandB.Detail->LenInt, core_FloatAdd(result, OperandA.Detail->pSFloat, OperandA.Detail->LenFloat, OperandB.Detail->pSFloat, OperandB.Detail->LenFloat));
+		result.Detail->Minus = true;
+	}
+	else if (!minusA&&minusB)
+	{
+		//正负相加
+		//9--5=14
+		core_IntAdd(result, OperandA.Detail->pSInt, OperandA.Detail->LenInt, OperandB.Detail->pSInt, OperandB.Detail->LenInt, core_FloatAdd(result, OperandA.Detail->pSFloat, OperandA.Detail->LenFloat, OperandB.Detail->pSFloat, OperandB.Detail->LenFloat));
+		result.Detail->Minus = false;
+	}
+	else {
+		//负负相加
+		if (BFCmp_abs(OperandA, OperandB, 1) >= 0)
+		{
+			//-5--1=-4
+			core_IntSub(result, OperandA.Detail->pSInt, OperandA.Detail->LenInt, OperandB.Detail->pSInt, OperandB.Detail->LenInt, core_FloatSub(result, OperandA.Detail->pSFloat, OperandA.Detail->LenFloat, OperandB.Detail->pSFloat, OperandB.Detail->LenFloat));
+			result.Detail->Minus = true;
+		}
+		else
+		{
+			//-5--6=1
+			core_IntSub(result, OperandB.Detail->pSInt, OperandB.Detail->LenInt, OperandA.Detail->pSInt, OperandA.Detail->LenInt, core_FloatSub(result, OperandB.Detail->pSFloat, OperandB.Detail->LenFloat, OperandA.Detail->pSFloat, OperandA.Detail->LenFloat));
+			result.Detail->Minus = false;
+		}
+	}
+	return result;
+}
+
+//接口函数
 
 
 
 
+//比较两个数的大小
+/*
+返回值表示两个数的大小情况
+0,	OperandA==OperandB
+1,	OperandA>OperandB
+-1,	OperandA<OperandB
+2,	OperandA>>OperandB
+-2,	OperandA<<OperandB
+*/
+int BFCmp(const BigFigure &OperandA, const BigFigure &OperandB)
+{
+	int minus = 1;				//当为负数时,返回的结果与正数相反,此变量控制的就是这个因数
 
+								//判断负号
+	if (OperandA.Detail->Minus)
+	{
+		if (OperandB.Detail->Minus)
+			minus = -1;//A,B同负
+		else
+			return -2;//A负B正
+	}
+	else
+	{
+		if (OperandB.Detail->Minus)
+			return 2;//A正B负
+					 //minus默认为1,不需要改动
+	}
+	return BFCmp_abs(OperandA, OperandB, minus);
+
+}
+int BFCmp_abs(const BigFigure &OperandA, const BigFigure &OperandB)
+{
+	return BFCmp_abs(OperandA, OperandB, 1);
+}
+/*
+比较两个数的绝对值大小
+*/
+int BFCmp_abs(const BigFigure &OperandA, const BigFigure &OperandB, int minus)
+{
+	//判断位
+	if (OperandA.Detail->LenInt > OperandB.Detail->LenInt)
+	{
+		return 2 * minus;
+	}
+	else if (OperandA.Detail->LenInt < OperandB.Detail->LenInt)
+	{
+		return -2 * minus;
+	}
+	else
+	{
+		//如果两个数整数部分长度相等,则进行比较各个位
+		int temp = strcmp(OperandA.Detail->pSInt, OperandB.Detail->pSInt);
+		if (temp)
+		{
+			//比较出结果,返回
+			return temp*minus;
+		}
+		else {
+			//整数部分完全相等,继续进行比较小数部分
+			int index_p = 0;
+			while (OperandA.Detail->pSFloat[index_p] && OperandA.Detail->pSFloat[index_p] == OperandB.Detail->pSFloat[index_p])index_p++;
+			if (OperandB.Detail->pSFloat[index_p] && OperandA.Detail->pSFloat[index_p] > OperandB.Detail->pSFloat[index_p])
+			{
+				//if (OperandB.Detail->NumFloat[index_p] >= '0')
+				return minus;
+			}
+			else if (OperandA.Detail->pSFloat[index_p] && OperandA.Detail->pSFloat[index_p] < OperandB.Detail->pSFloat[index_p])
+			{
+				return -minus;
+			}
+			else
+			{
+				temp = 0;
+				int index_p2 = index_p;
+				if (OperandA.Detail->pSFloat[index_p2] == '0')
+				{
+					index_p2++;
+					while (OperandA.Detail->pSFloat[index_p2] == '0'&&OperandA.Detail->pSFloat[index_p2] != 0)index_p2++;
+					if (OperandA.Detail->pSFloat[index_p2] != 0 && OperandA.Detail->pSFloat[index_p2] != '0')
+						temp = 1;
+				}
+				index_p2 = index_p;
+				if (OperandB.Detail->pSFloat[index_p2] == '0')
+				{
+					index_p2++;
+					while (OperandB.Detail->pSFloat[index_p2] == '0'&&OperandB.Detail->pSFloat[index_p2] != 0)index_p2++;
+					if (OperandB.Detail->pSFloat[index_p2] != 0 && OperandB.Detail->pSFloat[index_p2] != '0')
+						temp = -1;
+				}
+				return temp*minus;
+			}
+		}
+	}
+}
 

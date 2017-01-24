@@ -137,7 +137,6 @@ void NumStringDetail::NumCheck(const char * NumString)
 					//保存整数的长度
 					this->IntLen = tempString - NumString - this->IntStart_p;
 				}
-				//this->ExpStart_p = tempString - NumString+1;
 				Scinotation = true;
 				HasNumPre = false;
 			}
@@ -244,7 +243,7 @@ NumStringDetail::NumStringDetail(__int64 Num) :
 	RadixMinus(0), ExpMinus(0), IntBeZero(0), Mode(0), IntLen(0), FloatLen(0), ExpLen(0), IntStart_p(0), FloatStart_p(0), ExpStart_p(0)
 {
 	this->NumString = new char[32];
-	sprintf(this->NumString, "%I64d", Num);
+	_i64toa(Num, this->NumString, 10);
 	NumCheck(this->NumString);
 
 }
@@ -252,13 +251,13 @@ NumStringDetail::NumStringDetail(long Num) :
 	RadixMinus(0), ExpMinus(0), IntBeZero(0), Mode(0), IntLen(0), FloatLen(0), ExpLen(0), IntStart_p(0), FloatStart_p(0), ExpStart_p(0)
 {
 	this->NumString = new char[32];
-	sprintf(this->NumString, "%ld", Num);
+	ltoa(Num, this->NumString, 10);
 	NumCheck(this->NumString);
 }
 NumStringDetail::NumStringDetail(int Num) :
 	RadixMinus(0), ExpMinus(0), IntBeZero(0), Mode(0), IntLen(0), FloatLen(0), ExpLen(0), IntStart_p(0), FloatStart_p(0), ExpStart_p(0)
 {
 	this->NumString = new char[16];
-	sprintf(this->NumString, "%d", Num);
+	itoa(Num, this->NumString, 10);
 	NumCheck(this->NumString);
 }

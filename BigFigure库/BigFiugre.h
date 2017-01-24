@@ -57,7 +57,7 @@ public:
 
 	BigFigure & CopyDetail(const BigFigure & Source);
 
-	
+
 	//三种函数用于输出BF,其中运行效率由低到高,推荐使用第二种,第三种效率最高,但需要假设缓冲区的大小
 	std::string toString();
 	std::string toString(bool UseScinotation, bool ReserveZero);
@@ -65,20 +65,44 @@ public:
 	BFString toBFString(bool UseScinotation, bool ReserveZero);
 	char* toCString(char *result);
 	char* toCString(char *result, bool UseScinotation, bool ReserveZero);
-	
 
-	//运算函数
-	friend BigFigure& core_IntAdd(BigFigure & result, const BigFigure & OperandA, const BigFigure & OperandB, int carry);
-	template <class T> friend BigFigure& core_IntAdd_Basis(BigFigure & result, const BigFigure & OperandA, T OperandB, int carry);
-	friend int core_FloatAdd(BigFigure & result, const BigFigure & OperandA, const BigFigure & OperandB);
+
+	//运算核心函数
+	friend BigFigure& core_IntAdd(BigFigure & result, const char * OperandA, size_t LengthA, const char* OperandB, size_t LengthB, int carry);
+	friend BigFigure& core_IntSub(BigFigure & result, const char* OperandA, size_t LengthA, const char* OperandB, size_t LengthB, int borrow);
+
+	friend int core_FloatAdd(BigFigure & result, const char * OperandA, size_t LengthA, const char* OperandB, size_t LengthB);
+	friend int core_FloatSub(BigFigure & result, const char * OperandA, size_t LengthA, const char* OperandB, size_t LengthB);
+
 	friend BigFigure& core_FloatCopy(BigFigure &result, const BigFigure &OperandA);
-	
 
-	
-	friend BigFigure& core_IntSub(BigFigure & result, const BigFigure & OperandA, const BigFigure & OperandB, int borrow);
+	friend BigFigure & BFAdd(BigFigure & result, const BigFigure OperandA, const BigFigure & OperandB);
+	friend BigFigure & BFSub(BigFigure & result, const BigFigure OperandA, const BigFigure & OperandB);
+
+
+
+
+
+	friend int BFCmp(const BigFigure &OperandA, const BigFigure &OperandB);		//比较两个数字的大小
+	friend int BFCmp_abs(const BigFigure &OperandA, const BigFigure &OperandB);	//比较两个数的绝对值大小
+	friend int BFCmp_abs(const BigFigure &OperandA, const BigFigure &OperandB, int minus);
+
+
+
 	/*
-	friend int core_FloatSub(BigFigure & result, const BigFigure & OperandA, const BigFigure & OperandB);
+	friend BigFigure& core_IntAdd(BigFigure & result, const BigFigure & OperandA, const BigFigure & OperandB, int carry);
+	friend BigFigure& core_IntAdd(BigFigure & result, const BigFigure &OperandA, char * NumString, size_t length, int carry);
 
+	friend int core_FloatAdd(BigFigure & result, const BigFigure & OperandA, const BigFigure & OperandB);
+	friend int core_FloatAdd(BigFigure & result, const BigFigure & OperandA, char * NumString, size_t length);
+
+	friend BigFigure& core_IntSub(BigFigure & result, const BigFigure & OperandA, const BigFigure & OperandB, int borrow);
+	friend BigFigure& core_IntSub(BigFigure & result, const BigFigure & OperandA, char * NumString, size_t length, int borrow);
+
+	friend int core_FloatSub(BigFigure & result, const BigFigure & OperandA, const BigFigure & OperandB);
+*/
+
+/*
 	//friend void core_IntAdd(BigFigure & result, const BigFigure & OperandA, double OperandB);
 	friend BigFigure& core_IntAdd(BigFigure & result, const BigFigure & OperandA, __int64 OperandB);
 	friend BigFigure& core_IntAdd(BigFigure & result, const BigFigure & OperandA, long OperandB);
@@ -103,8 +127,6 @@ public:
 	void printDetail();														//打印数字的详细信息
 
 																			//友元函数
-	friend int BFCmp(const BigFigure &OperandA, const BigFigure &OperandB);		//比较两个数字的大小
-	friend int BFCmp_abs(const BigFigure &OperandA, const BigFigure &OperandB);	//比较两个数的绝对值大小
 	template <typename T> friend int BFCmp_abs(const BigFigure &OperandA, T OperandB);
 
 	//重载函数
