@@ -9,6 +9,9 @@
 #include "NumStringDetail.h"
 #include "BFFunc.h"
 #include "BFString.h"
+#include "BFDetail.h"
+
+
 //编译开关
 
 //全局变量
@@ -21,24 +24,11 @@ extern size_t ScinotationLen;		//用科学计数法表示时的有效位数
 
 class _BigFigure;
 
+//BigFigure正式对象
 class BigFigure
 {
 private:
-	struct BFDetail
-	{
-		size_t ReferCount;      //引用计数,用于判断何时销毁
-		size_t AllocInt;		//整数部分的已分配内存长度
-		size_t AllocFloat;      //浮点数部分的最大精确度
-		size_t LenInt;			//整数部分数字的有效位数(实际长度)
-		size_t LenFloat;		//小数部分数字的有效位数(实际长度)
-		bool Minus;             //表示是否为负数,如果为负数,则该值为1
-		bool Legal;				//表示是否为非法数字,如果是非法数字,则此值为true
-		char *pSInt;			//可输出的整数部分的字符串的首地址
-		char *pSRP;				//整数部分的尾地址(用于快速计算写入位置)(处于小数点所在的位置)
-		char *pSFloat;			//可输出的浮点数部分的字符串的首地址
-		char *DataHead;			//保存申请的字符串空间的首指针
-	} *Detail;
-
+	struct BFDetail *Detail;
 
 	//friend int BFCmp_abs(const BigFigure &OperandA, const BigFigure &OperandB, int minus);	//比较两个数的绝对值大小
 	char* BigFigure::_toString(size_t &length, bool UseScinotation, bool ReserveZero);
@@ -47,6 +37,7 @@ public:
 	//BigFigure();
 	BigFigure(size_t IntSize, size_t FloatSize);
 	BigFigure(const BigFigure& Base);
+	BigFigure(const _BigFigure& Base);
 	~BigFigure();
 
 	BigFigure& Expand(size_t IntSize, size_t FloatSize);
@@ -67,16 +58,8 @@ public:
 
 
 	//运算核心函数
-	friend BigFigure& core_IntAdd(BigFigure & result, const char * OperandA, size_t LengthA, const char* OperandB, size_t LengthB, int carry);
-	friend BigFigure& core_IntSub(BigFigure & result, const char* OperandA, size_t LengthA, const char* OperandB, size_t LengthB, int borrow);
-
-	friend int core_FloatAdd(BigFigure & result, const char * OperandA, size_t LengthA, const char* OperandB, size_t LengthB);
-	friend int core_FloatSub(BigFigure & result, const char * OperandA, size_t LengthA, const char* OperandB, size_t LengthB);
-
-	friend BigFigure& core_FloatCopy(BigFigure &result, const BigFigure &OperandA);
-
-	friend BigFigure & BFAdd(BigFigure & result, const BigFigure OperandA, const BigFigure & OperandB);
-	friend BigFigure & BFSub(BigFigure & result, const BigFigure OperandA, const BigFigure & OperandB);
+	friend BigFigure & BFAdd(BigFigure & result, const BigFigure & OperandA, const BigFigure & OperandB);
+	friend BigFigure & BFSub(BigFigure & result, const BigFigure & OperandA, const BigFigure & OperandB);
 
 
 
@@ -139,7 +122,6 @@ public:
 
 	friend std::ostream& operator<<(std::ostream &os, BigFigure &Source);
 
-	
 	friend _BigFigure operator+(const BigFigure &OperandA, const BigFigure &OperandB);
 	friend _BigFigure operator-(const BigFigure &OperandA, const BigFigure &OperandB);
 
@@ -156,8 +138,11 @@ public:
 	friend bool operator<=(const BigFigure& OperandA, const BigFigure&OperandB);
 	friend bool operator>=(const BigFigure& OperandA, const BigFigure&OperandB);
 	*/
+	friend class _BigFigure;
 };
+
 #include "_BigFigure.h"
+
 typedef BigFigure BF;
 
 #endif

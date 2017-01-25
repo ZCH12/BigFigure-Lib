@@ -71,6 +71,16 @@ BigFigure::BigFigure(const BigFigure & Base)
 }
 
 /*
+拷贝一个BF
+注意,调用此拷贝构造函数得到的是两个共用内存的对象,两个对象本质上是同一个对象
+*/
+BigFigure::BigFigure(const _BigFigure & Base)
+{
+	this->Detail = Base.Detail;
+	this->Detail->ReferCount++;
+}
+
+/*
 析构函数
 用于释放对象
 */
@@ -86,6 +96,8 @@ BigFigure::~BigFigure()
 	return;
 }
 
+
+
 /*
 重新分配对象内存(保留数据),
 如果缩小内存则可能导致数据丢失
@@ -94,71 +106,6 @@ BigFigure::~BigFigure()
 */
 BigFigure& BigFigure::Expand(size_t IntSize, size_t FloatSize)
 {
-	char *temp;								//新的内存空间
-
-	int AllocatedMem;
-	if (IntSize == 0)
-		throw BFException(ERR_ILLEGALPARAM, "整数部分分配的内存不能为0", EXCEPTION_DETAIL);
-
-	AllocatedMem = (int)IntSize + 1;
-	if (FloatSize > 0)
-		AllocatedMem += (int)FloatSize + 1;
-
-	try
-	{
-		temp = new char[AllocatedMem];
-		temp[IntSize] = 0;				//写入中间的'\0'
-		if (IntSize >= Detail->LenInt)
-			strncpy(temp + IntSize - Detail->LenInt, Detail->pSInt, Detail->LenInt);//整数部分安全得进行复制
-		else
-		{
-			//整数部分将会被截断
-			if (ConfirmWontLossHighBit)
-			{
-				delete[] temp;
-				throw BFException(ERR_NUMBERTOOBIG, "修改大小之后对象中原来存放的值会被截断", EXCEPTION_DETAIL);
-			}
-			else
-				strncpy(temp, Detail->pSInt + Detail->LenInt - IntSize, IntSize);//进行安全截断
-		}
-		if (FloatSize >= Detail->LenFloat)
-		{
-			if (Detail->LenFloat != 0)
-				strncpy(temp + IntSize + 1, Detail->pSFloat, Detail->LenFloat + 1);//小数部分安全得进行复制
-			temp[IntSize + 1 + Detail->LenFloat] = 0;
-		}
-		else
-		{
-			//小数部分将会被截断
-			if (ConfirmWontLossAccuracy)
-			{
-				delete[] temp;
-				throw BFException(ERR_MAYACCURACYLOSS, "修改后的对象无法装入原来的小数位,将会丢失精度", EXCEPTION_DETAIL);
-			}
-			else
-			{
-				strncpy(temp + IntSize + 1, Detail->pSFloat, FloatSize);
-				temp[AllocatedMem - 1] = 0;		//写入结束符
-			}
-		}
-		//运行到这里如果没有发生错误,则可以安全得提交数据
-		delete[] Detail->DataHead;
-		Detail->DataHead = temp;
-		Detail->pSRP = temp + IntSize;
-		if (Detail->LenInt > IntSize)			//为被截断的数字重新计算长度
-			Detail->LenInt = IntSize;
-		if (Detail->LenFloat > FloatSize)
-			Detail->LenFloat = FloatSize;
-		Detail->pSInt = Detail->pSRP - Detail->LenInt;
-		Detail->pSFloat = Detail->pSRP + 1;
-		Detail->AllocInt = IntSize;
-		Detail->AllocFloat = FloatSize;
-
-	}
-	catch (std::bad_alloc)
-	{
-		throw BFException(ERR_MEMORYALLOCATEDEXCEPTION, "对象内存分配错误(String)", EXCEPTION_DETAIL);
-	}
 
 	return *this;
 }

@@ -146,6 +146,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="BFDetail.h" />
     <ClInclude Include="BFException.h" />
     <ClInclude Include="BFFunc.h" />
     <ClInclude Include="BFString.h" />
@@ -155,6 +156,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BFException.cpp" />
+    <ClCompile Include="BFFunc.cpp" />
     <ClCompile Include="BFoperator.cpp" />
     <ClCompile Include="BFString.cpp" />
     <ClCompile Include="BigFiugre.cpp" />

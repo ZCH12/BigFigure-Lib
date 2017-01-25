@@ -62,8 +62,8 @@ int main()
 	std::cout << clock() - t1<<"ms" << std::endl;
 	std::cout << c << std::endl;
 */
-	c = a + b;
-	c = c - b;
+	c = a + b+b+b;
+	//c = c - b;
 
 
 	//std::cout << core_IntSub(c, a, b, 0) << std::endl;

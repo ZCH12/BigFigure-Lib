@@ -35,6 +35,7 @@ BigFigure& BigFigure::operator=(const int Source)
 	return *this;
 }
 
+
 std::ostream& operator<<(std::ostream &os, BigFigure &Source)
 {
 	os << Source.toBFString().c_str();
@@ -62,4 +63,17 @@ _BigFigure operator-(const BigFigure &OperandA, const BigFigure &OperandB)
 _BigFigure operator+(const BigFigure &OperandA, const double OperandB)
 {
 	return _BigFigure(1, 1);
+}
+
+
+
+
+
+
+
+_BigFigure& operator+(_BigFigure &OperandA, const BigFigure &OperandB)
+{
+	//std::cout << "_B+" << std::endl;
+	//BFAdd(OperandA, OperandA, OperandB);
+	return OperandA;
 }
