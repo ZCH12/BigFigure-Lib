@@ -9,9 +9,6 @@
 #include "NumStringDetail.h"
 #include "BFFunc.h"
 #include "BFString.h"
-
-
-
 //±àÒë¿ª¹Ø
 
 //È«¾Ö±äÁ¿
@@ -21,6 +18,8 @@ extern bool ConfirmWontLossAccuracy;//È·±£²»½Ø¶ÏĞ¡ÊıµÄÓĞĞ§Î»(¹Ø±ÕÖ®ºóÈç¹û¸³ÖµÊ±Ğ
 extern bool ConfirmWontLossHighBit;	//È·±£²»¶ªÊ§ÕûÊıµÄ¸ßÎ»(Èç¹û·¢ÉúÒç³öÊ±),Èç¹ûÎªtrue,Ôò·¢ÉúÒç³öÊ±»áÅ×³öÒì³£,Èç¹ûÎªfalse,ÔòÈç¹ûÒç³öÔòÉáÆú¸ßÎ»
 extern bool AutoExpand;				//ÔÚÄÚ´æ²»×ãÊ±×Ô¶¯ÍØÕ¹¿Õ¼ä
 extern size_t ScinotationLen;		//ÓÃ¿ÆÑ§¼ÆÊı·¨±íÊ¾Ê±µÄÓĞĞ§Î»Êı
+
+class _BigFigure;
 
 class BigFigure
 {
@@ -140,11 +139,13 @@ public:
 
 	friend std::ostream& operator<<(std::ostream &os, BigFigure &Source);
 
-	/*
-	friend BigFigure operator+(const BigFigure &OperandA, const BigFigure &OperandB);
-	friend BigFigure operator+(const BigFigure &OperandA, const double OperandB);
+	
+	friend _BigFigure operator+(const BigFigure &OperandA, const BigFigure &OperandB);
+	friend _BigFigure operator-(const BigFigure &OperandA, const BigFigure &OperandB);
 
+	friend _BigFigure operator+(const BigFigure &OperandA, const double OperandB);
 
+/*
 	friend BigFigure operator-(const BigFigure & OperandA, const BigFigure & OperandB);
 	friend BigFigure operator-(const BigFigure & OperandA, const double OperandB);
 
@@ -156,7 +157,7 @@ public:
 	friend bool operator>=(const BigFigure& OperandA, const BigFigure&OperandB);
 	*/
 };
-
+#include "_BigFigure.h"
 typedef BigFigure BF;
 
 #endif

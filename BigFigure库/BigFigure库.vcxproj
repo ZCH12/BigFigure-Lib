@@ -151,6 +151,7 @@
     <ClInclude Include="BFString.h" />
     <ClInclude Include="BigFiugre.h" />
     <ClInclude Include="NumStringDetail.h" />
+    <ClInclude Include="_BigFigure.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BFException.cpp" />
@@ -159,6 +160,7 @@
     <ClCompile Include="BigFiugre.cpp" />
     <ClCompile Include="NumStringDetail.cpp" />
     <ClCompile Include="_BFcore.cpp" />
+    <ClCompile Include="_BigFigure.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

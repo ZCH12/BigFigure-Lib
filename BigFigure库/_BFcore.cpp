@@ -1,4 +1,3 @@
-#define _DLL_API_ 
 #include  "BigFiugre.h"
 
 #define CONST_OVER9 106		//该值等于'0'+'9'+1
@@ -219,7 +218,7 @@ BigFigure& core_IntSub(BigFigure & result, const char* OperandA, size_t LengthA,
 	//判断内存是否足够
 	int buffer;										//计算时的缓冲区
 	int offsetA = 0, offsetB = 0;
-	int ExtraSize;
+	size_t ExtraSize;
 
 	if (LengthA >= result.Detail->AllocInt)
 	{
@@ -361,7 +360,7 @@ BigFigure& core_IntSub(BigFigure & result, const char* OperandA, size_t LengthA,
 		}
 		else
 		{
-			int temp = StringEH + ExtraSize - StringET - 1;
+			int temp = (int)(StringEH + ExtraSize - StringET) - 1;
 			result.Detail->LenInt = result.Detail->pSRP - StringRT;
 			result.Detail->pSInt = StringRT;
 			result.Expand(result.Detail->AllocInt + temp, result.Detail->AllocFloat);
@@ -375,6 +374,8 @@ BigFigure& core_IntSub(BigFigure & result, const char* OperandA, size_t LengthA,
 	{
 		while (*StringRT == '0')		//去除结果前面多余的0
 			StringRT++;
+		if (*StringRT == 0)				//防止结果为空,使得最小值为0
+			StringRT--;
 		result.Detail->LenInt = result.Detail->pSRP - StringRT;
 		result.Detail->pSInt = StringRT;
 	}
@@ -720,7 +721,7 @@ int BFCmp(const BigFigure &OperandA, const BigFigure &OperandB)
 {
 	int minus = 1;				//当为负数时,返回的结果与正数相反,此变量控制的就是这个因数
 
-								//判断负号
+	//判断负号
 	if (OperandA.Detail->Minus)
 	{
 		if (OperandB.Detail->Minus)
@@ -732,7 +733,7 @@ int BFCmp(const BigFigure &OperandA, const BigFigure &OperandB)
 	{
 		if (OperandB.Detail->Minus)
 			return 2;//A正B负
-					 //minus默认为1,不需要改动
+			//else      //A正B正   minus默认为1,不需要改动
 	}
 	return BFCmp_abs(OperandA, OperandB, minus);
 
@@ -748,52 +749,40 @@ int BFCmp_abs(const BigFigure &OperandA, const BigFigure &OperandB, int minus)
 {
 	//判断位
 	if (OperandA.Detail->LenInt > OperandB.Detail->LenInt)
-	{
 		return 2 * minus;
-	}
 	else if (OperandA.Detail->LenInt < OperandB.Detail->LenInt)
-	{
 		return -2 * minus;
-	}
 	else
 	{
 		//如果两个数整数部分长度相等,则进行比较各个位
 		int temp = strcmp(OperandA.Detail->pSInt, OperandB.Detail->pSInt);
 		if (temp)
+			return temp*minus;		//比较出结果,返回
+		else
 		{
-			//比较出结果,返回
-			return temp*minus;
-		}
-		else {
 			//整数部分完全相等,继续进行比较小数部分
-			int index_p = 0;
-			while (OperandA.Detail->pSFloat[index_p] && OperandA.Detail->pSFloat[index_p] == OperandB.Detail->pSFloat[index_p])index_p++;
-			if (OperandB.Detail->pSFloat[index_p] && OperandA.Detail->pSFloat[index_p] > OperandB.Detail->pSFloat[index_p])
-			{
-				//if (OperandB.Detail->NumFloat[index_p] >= '0')
+			char *StringAH = OperandA.Detail->pSFloat,
+				*StringBH = OperandB.Detail->pSFloat;
+
+			while (*StringAH && *StringAH == *StringBH)StringAH++, StringBH++;		//找到不相等项,并且确保他们都不为'\0'
+			if (*StringBH && *StringAH > *StringBH)
 				return minus;
-			}
-			else if (OperandA.Detail->pSFloat[index_p] && OperandA.Detail->pSFloat[index_p] < OperandB.Detail->pSFloat[index_p])
-			{
+			else if (*StringAH && *StringAH < *StringBH)
 				return -minus;
-			}
 			else
 			{
+				//找到不相等的项(可能存在相等但小数末尾的0太多)
 				temp = 0;
-				int index_p2 = index_p;
-				if (OperandA.Detail->pSFloat[index_p2] == '0')
+				if (*StringAH == '0')
 				{
-					index_p2++;
-					while (OperandA.Detail->pSFloat[index_p2] == '0'&&OperandA.Detail->pSFloat[index_p2] != 0)index_p2++;
-					if (OperandA.Detail->pSFloat[index_p2] != 0 && OperandA.Detail->pSFloat[index_p2] != '0')
+					while (*StringAH == '0'&&*StringAH != 0)StringAH++;
+					if (*StringAH != 0 && *StringAH != '0')
 						temp = 1;
 				}
-				index_p2 = index_p;
-				if (OperandB.Detail->pSFloat[index_p2] == '0')
+				if (*StringBH == '0')
 				{
-					index_p2++;
-					while (OperandB.Detail->pSFloat[index_p2] == '0'&&OperandB.Detail->pSFloat[index_p2] != 0)index_p2++;
-					if (OperandB.Detail->pSFloat[index_p2] != 0 && OperandB.Detail->pSFloat[index_p2] != '0')
+					while (*StringBH == '0'&&*StringBH != 0)StringBH++;
+					if (*StringBH != 0 && *StringBH != '0')
 						temp = -1;
 				}
 				return temp*minus;

@@ -1,4 +1,3 @@
-#define _DLL_API_ 
 #include "BigFiugre.h"
 
 bool ReserveZero = true;				//保留小数后的0

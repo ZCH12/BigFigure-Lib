@@ -1,7 +1,7 @@
 #define _DLL_API_ 
 #include "NumStringDetail.h"
 
-void NumStringDetail::NumCheck(const char * NumString)
+inline void NumStringDetail::NumCheck(const char * NumString)
 {
 	const char *tempString = NumString;
 
@@ -164,16 +164,6 @@ void NumStringDetail::NumCheck(const char * NumString)
 		while (this->FloatLen&& temp[this->FloatLen] == '0')	//去除小数点后的'0'
 			this->FloatLen--;
 	}
-	if ((!this->FloatLen&&IntBeZero) || !(HasNumPre || HasPoint))
-	{
-		//数字为0,两种情况:
-		//1.整数为0
-		//2.小数为0
-		this->IntStart_p = 0;
-		this->IntLen = 1;
-		this->RadixMinus = false;
-		strcpy(this->NumString, "0");
-	}
 
 	this->IntBeZero = IntBeZero;
 	if (Scinotation)			//判断是否为科学计数法表示的数
@@ -215,6 +205,16 @@ void NumStringDetail::NumCheck(const char * NumString)
 	{
 		//整数
 		this->Mode += 1;
+	}
+	if ((!this->FloatLen&&IntBeZero) || !(HasNumPre || HasPoint))
+	{
+		//数字为0,两种情况:
+		//1.整数为0
+		//2.小数为0
+		this->IntStart_p = 0;
+		this->IntLen = 1;
+		this->RadixMinus = false;
+		strcpy(this->NumString, "0");
 	}
 
 	return;
