@@ -22,10 +22,32 @@ public:
 	_BigFigure(const _BigFigure & Base);
 	_BigFigure(const BigFigure& Base);
 	~_BigFigure();
+
+
+	//运算函数
+	friend _BigFigure & BFAdd(_BigFigure & result, const BigFigure & OperandA, const BigFigure & OperandB);
+	friend _BigFigure & BFSub(_BigFigure & result, const BigFigure & OperandA, const BigFigure & OperandB);
+
+
+
 	//各种重载函数
 
+	//三种函数用于输出BF,其中运行效率由低到高,推荐使用第二种,第三种效率最高,但需要假设缓冲区的大小
+	std::string toString();
+	std::string toString(bool UseScinotation, bool ReserveZero);
+	BFString toBFString();
+	BFString toBFString(bool UseScinotation, bool ReserveZero);
+	char* toCString(char *result);
+	char* toCString(char *result, bool UseScinotation, bool ReserveZero);
+
+
 	//operator BigFigure();
+	friend _BigFigure operator+(const BigFigure &OperandA, const BigFigure &OperandB);
+	friend _BigFigure operator-(const BigFigure &OperandA, const BigFigure &OperandB);
 	friend _BigFigure& operator+(_BigFigure &OperandA, const BigFigure &OperandB);
+	friend _BigFigure& operator-(_BigFigure &OperandA, const BigFigure &OperandB);
+	friend _BigFigure& operator+(_BigFigure &OperandA, const _BigFigure &OperandB);
+	friend _BigFigure& operator-(_BigFigure &OperandA, const _BigFigure &OperandB);
 	friend class BigFigure;
 };
 

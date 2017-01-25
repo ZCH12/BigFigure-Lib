@@ -77,6 +77,7 @@ _BigFigure::~_BigFigure()
 	Detail->ReferCount--;
 	if (!Detail->ReferCount)
 	{
+		std::cout << "析构" << std::endl;
 		//当引用计数为0时才释放Detail所占的内存
 		delete[] Detail->DataHead;
 		delete Detail;
@@ -90,3 +91,55 @@ _BigFigure::operator BigFigure()
 {
 	return (BigFigure)*this;
 }*/
+
+
+std::string _BigFigure::toString()
+{
+	size_t a;
+	char *temp = core_toString(Detail, a, ScinotationShow, ReserveZero);
+	std::string ReturnVal = std::string(temp, a);
+	delete[] temp;
+	return ReturnVal;
+}
+std::string _BigFigure::toString(bool UseScinotation, bool ReserveZero)
+{
+	size_t a;
+	char *temp = core_toString(Detail, a, UseScinotation, ReserveZero);
+	std::string ReturnVal = std::string(temp, a);
+	delete[] temp;
+	return ReturnVal;
+}
+
+BFString _BigFigure::toBFString()
+{
+	size_t a;
+	char *temp = core_toString(Detail, a, ScinotationShow, ReserveZero);
+	BFString ReturnVal(temp, a);
+	delete[] temp;
+	return ReturnVal;
+}
+BFString _BigFigure::toBFString(bool UseScinotation, bool ReserveZero)
+{
+	size_t a;
+	char *temp = core_toString(Detail, a, UseScinotation, ReserveZero);
+	BFString ReturnVal(temp, a);
+	delete[] temp;
+	return ReturnVal;
+}
+
+char* _BigFigure::toCString(char *result)
+{
+	size_t a;
+	char *temp = core_toString(Detail, a, ScinotationShow, ReserveZero);
+	strcpy(result, temp);
+	delete temp;
+	return result;
+}
+char* _BigFigure::toCString(char *result, bool UseScinotation, bool ReserveZero)
+{
+	size_t a;
+	char *temp = core_toString(Detail, a, UseScinotation, ReserveZero);
+	strcpy(result, temp);
+	delete temp;
+	return result;
+}

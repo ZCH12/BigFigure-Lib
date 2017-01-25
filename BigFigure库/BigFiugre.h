@@ -10,7 +10,7 @@
 #include "BFFunc.h"
 #include "BFString.h"
 #include "BFDetail.h"
-
+#include <iostream>
 
 //编译开关
 
@@ -37,7 +37,7 @@ public:
 	//BigFigure();
 	BigFigure(size_t IntSize, size_t FloatSize);
 	BigFigure(const BigFigure& Base);
-	BigFigure(const _BigFigure& Base);
+	//BigFigure(const _BigFigure& Base);
 	~BigFigure();
 
 	BigFigure& Expand(size_t IntSize, size_t FloatSize);
@@ -45,7 +45,6 @@ public:
 
 	BigFigure& toBF(NumStringDetail &NumStringDetail);
 
-	BigFigure & CopyDetail(const BigFigure & Source);
 
 
 	//三种函数用于输出BF,其中运行效率由低到高,推荐使用第二种,第三种效率最高,但需要假设缓冲区的大小
@@ -60,8 +59,6 @@ public:
 	//运算核心函数
 	friend BigFigure & BFAdd(BigFigure & result, const BigFigure & OperandA, const BigFigure & OperandB);
 	friend BigFigure & BFSub(BigFigure & result, const BigFigure & OperandA, const BigFigure & OperandB);
-
-
 
 
 
@@ -114,6 +111,7 @@ public:
 	//重载函数
 	*/
 	BigFigure& operator=(const BigFigure &Source);
+	BigFigure& operator=(const _BigFigure &Source);
 	BigFigure& operator=(const char* Source);
 	BigFigure& operator=(const double Source);
 	BigFigure& operator=(const __int64 Source);
@@ -124,6 +122,8 @@ public:
 
 	friend _BigFigure operator+(const BigFigure &OperandA, const BigFigure &OperandB);
 	friend _BigFigure operator-(const BigFigure &OperandA, const BigFigure &OperandB);
+	friend _BigFigure& operator+(_BigFigure &OperandA, const BigFigure &OperandB);
+	friend _BigFigure& operator-(_BigFigure &OperandA, const BigFigure &OperandB);
 
 	friend _BigFigure operator+(const BigFigure &OperandA, const double OperandB);
 

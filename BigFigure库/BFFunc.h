@@ -5,6 +5,7 @@
 
 #ifndef BFFUNC_H
 #define BFFUNC_H
+#define _CRT_SECURE_NO_WARNINGS
 #include <cstring>
 #include <string>
 #include "BFDetail.h"
@@ -25,7 +26,17 @@ int core_FloatSub(BFDetail* result, const char * OperandA, size_t LengthA, const
 
 void core_FloatCopy(BFDetail* result, const char * OperandA, size_t LengthA);
 
-BFDetail* Expand(BFDetail* OperandDetail, size_t IntSize, size_t FloatSize);
+BFDetail * core_BFAdd(BFDetail * result, const BFDetail * OperandA, const BFDetail * OperandB);
+BFDetail * core_BFSub(BFDetail*result, const BFDetail * OperandA, const BFDetail * OperandB);
+
+
+BFDetail* core_Expand(BFDetail* OperandDetail, size_t IntSize, size_t FloatSize);
+char* core_toString(BFDetail * OperandDetail, size_t &length, bool UseScinotation, bool ReserveZero);
+void core_CopyDetail(BFDetail* Dest, const BFDetail * Source);
+
+int core_BFCmp(const BFDetail *OperandA, const BFDetail *OperandB);
+int core_BFCmp_abs(const BFDetail*OperandA, const BFDetail *OperandB);
+int core_BFCmp_abs(const BFDetail*OperandA, const BFDetail *OperandB, int minus);
 
 
 #endif // !BFFUNC_H

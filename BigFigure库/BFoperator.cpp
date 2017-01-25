@@ -7,8 +7,15 @@
 
 BigFigure& BigFigure::operator=(const BigFigure &Source)
 {
-	return CopyDetail(Source);
+	core_CopyDetail(this->Detail, Source.Detail);
+	return *this;
 }
+BigFigure& BigFigure::operator=(const _BigFigure &Source)
+{
+	core_CopyDetail(this->Detail, Source.Detail);
+	return *this;
+}
+
 BigFigure& BigFigure::operator=(const char* Source)
 {
 	this->toBF(NumStringDetail(Source));
@@ -47,7 +54,7 @@ _BigFigure operator+(const BigFigure &OperandA, const BigFigure &OperandB)
 {
 	_BigFigure Return((OperandA.Detail->AllocInt > OperandB.Detail->AllocInt ? OperandA.Detail->AllocInt : OperandB.Detail->AllocInt) + 1,
 		OperandA.Detail->AllocFloat > OperandB.Detail->AllocFloat ? OperandA.Detail->AllocFloat : OperandB.Detail->AllocFloat);
-	BFAdd((BigFigure)Return, OperandA, OperandB);
+	core_BFAdd(Return.Detail, OperandA.Detail, OperandB.Detail);
 	return Return;
 }
 
@@ -55,25 +62,29 @@ _BigFigure operator-(const BigFigure &OperandA, const BigFigure &OperandB)
 {
 	_BigFigure Return((OperandA.Detail->AllocInt > OperandB.Detail->AllocInt ? OperandA.Detail->AllocInt : OperandB.Detail->AllocInt) + 1,
 		OperandA.Detail->AllocFloat > OperandB.Detail->AllocFloat ? OperandA.Detail->AllocFloat : OperandB.Detail->AllocFloat);
-	BFSub((BigFigure)Return, OperandA, OperandB);
+	core_BFSub(Return.Detail, OperandA.Detail, OperandB.Detail);
 	return Return;
 }
 
-
-_BigFigure operator+(const BigFigure &OperandA, const double OperandB)
+_BigFigure& operator+(_BigFigure &OperandA, const BigFigure &OperandB)
 {
-	return _BigFigure(1, 1);
+	core_BFAdd(OperandA.Detail, OperandA.Detail, OperandB.Detail);
+	return OperandA;
+}
+_BigFigure& operator-(_BigFigure &OperandA, const BigFigure &OperandB)
+{
+	core_BFSub(OperandA.Detail, OperandA.Detail, OperandB.Detail);
+	return OperandA;
 }
 
 
-
-
-
-
-
-_BigFigure& operator+(_BigFigure &OperandA, const BigFigure &OperandB)
+_BigFigure& operator+(_BigFigure &OperandA, const _BigFigure &OperandB)
 {
-	//std::cout << "_B+" << std::endl;
-	//BFAdd(OperandA, OperandA, OperandB);
+	core_BFAdd(OperandA.Detail, OperandA.Detail, OperandB.Detail);
+	return OperandA;
+}
+_BigFigure& operator-(_BigFigure &OperandA, const _BigFigure &OperandB)
+{
+	core_BFSub(OperandA.Detail, OperandA.Detail, OperandB.Detail);
 	return OperandA;
 }

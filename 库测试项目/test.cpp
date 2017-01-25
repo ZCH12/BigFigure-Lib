@@ -52,7 +52,7 @@ int main()
 {
 	BF a(100, 100), b(100, 120), c(3, 100);
 	a = "-1.123";
-	b = "-0.999999";
+	b = "0.999999";
 
 
 	/*
@@ -62,7 +62,9 @@ int main()
 	std::cout << clock() - t1<<"ms" << std::endl;
 	std::cout << c << std::endl;
 */
-	c = a + b+b+b;
+
+	c = b + b + b + b + b + b + b + b + b + b;
+
 	//c = c - b;
 
 

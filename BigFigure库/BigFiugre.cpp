@@ -73,13 +73,13 @@ BigFigure::BigFigure(const BigFigure & Base)
 /*
 拷贝一个BF
 注意,调用此拷贝构造函数得到的是两个共用内存的对象,两个对象本质上是同一个对象
-*/
+
 BigFigure::BigFigure(const _BigFigure & Base)
 {
 	this->Detail = Base.Detail;
 	this->Detail->ReferCount++;
 }
-
+*/
 /*
 析构函数
 用于释放对象
@@ -106,7 +106,7 @@ BigFigure::~BigFigure()
 */
 BigFigure& BigFigure::Expand(size_t IntSize, size_t FloatSize)
 {
-
+	core_Expand(Detail, IntSize, FloatSize);
 	return *this;
 }
 
@@ -115,7 +115,8 @@ BigFigure& BigFigure::Expand(size_t IntSize, size_t FloatSize)
 */
 BigFigure & BigFigure::Expand(const BigFigure & Source)
 {
-	return Expand(Source.Detail->AllocInt, Source.Detail->AllocFloat);
+	core_Expand(Detail, Source.Detail->AllocInt, Source.Detail->AllocFloat);
+	return *this;
 }
 
 BigFigure& BigFigure::toBF(NumStringDetail &NumStringDetail)
@@ -422,231 +423,10 @@ BigFigure& BigFigure::toBF(NumStringDetail &NumStringDetail)
 	return *this;
 }
 
-//将一个对象的值复制到当前对象中,两个对象相互独立
-BigFigure & BigFigure::CopyDetail(const BigFigure & Source)
-{
-	this->Detail->Minus = Source.Detail->Minus;
-	this->Detail->Legal = Source.Detail->Legal;
-
-	try
-	{
-		if (this->Detail->AllocInt < Source.Detail->LenInt)
-		{
-			if (ConfirmWontLossHighBit)
-				throw BFException(ERR_NUMBERTOOBIG, "整数部分内存不足", EXCEPTION_DETAIL);
-		}
-		if (this->Detail->AllocFloat < Source.Detail->LenFloat)
-		{
-			if (ConfirmWontLossAccuracy)
-				throw BFException(ERR_MAYACCURACYLOSS, "小数部分内存不足", EXCEPTION_DETAIL);
-		}
-	}
-	catch (BFException &e)
-	{
-		switch (e.GetID())
-		{
-		case ERR_NUMBERTOOBIG:
-		case ERR_MAYACCURACYLOSS:
-			if (AutoExpand)
-			{
-				Expand(this->Detail->AllocInt > Source.Detail->LenFloat ? this->Detail->AllocInt : Source.Detail->LenFloat,
-					this->Detail->AllocFloat > Source.Detail->LenFloat ? this->Detail->AllocFloat : Source.Detail->LenFloat);
-				break;
-
-			}
-		default:
-			throw BFException(e);
-		}
-	}
-
-
-	if (this->Detail->AllocInt >= Source.Detail->LenInt)
-	{
-		//空间足够复制,进行复制
-		this->Detail->pSInt = this->Detail->pSRP - Source.Detail->LenInt;			//找到写入位置
-		this->Detail->LenInt = Source.Detail->LenInt;
-		strcpy(this->Detail->pSInt, Source.Detail->pSInt);
-	}
-	else
-	{
-		//截断性复制
-		this->Detail->pSInt = this->Detail->DataHead;
-		strncpy(this->Detail->pSInt, Source.Detail->pSInt + Source.Detail->LenInt - this->Detail->AllocInt, this->Detail->AllocInt);
-		while (this->Detail->pSInt[0] == '0')this->Detail->pSInt++;					//去除整数前面的0
-		this->Detail->LenInt = this->Detail->pSRP - this->Detail->pSInt;			//计算整数的长度
-	}
-	if (Source.Detail->LenFloat)
-	{
-		if (this->Detail->AllocFloat >= Source.Detail->LenFloat)
-		{
-			if (Source.Detail->pSFloat[0] != 0)
-			{
-				this->Detail->LenFloat = Source.Detail->LenFloat;
-				strcpy(this->Detail->pSFloat, Source.Detail->pSFloat);
-			}
-		}
-		else
-		{
-			this->Detail->LenFloat = this->Detail->AllocFloat;
-			strncpy(this->Detail->pSFloat, Source.Detail->pSFloat, this->Detail->AllocFloat);
-		}
-	}
-	else
-	{
-		//源为空
-		if (!this->Detail->AllocFloat)
-		{
-			this->Detail->LenFloat = 0;
-			this->Detail->pSFloat[0] = 0;
-		}
-	}
-
-	return *this;
-}
-
-//将BF转化为数字进行输出(核心)
-//此函数不要自己调用它,而应该调用它的封装版本
-char* BigFigure::_toString(size_t &length, bool UseScinotation, bool ReserveZero)
-{
-	char *tempString = new char[Detail->LenInt + Detail->LenFloat + 7];	//新建一块足够存放数据的缓冲区;							//保存缓冲区地址
-	int skip;											//被跳过的位数省略的位数用于最终计算指数
-	//std::string RetVal;								//返回的字符串的长度
-	size_t index_p = 0;									//写入位置标记
-	size_t r_index;										//从元数据中读取数据的下标
-	size_t sign = ScinotationLen;						//记录有效数字的个数(仅在科学计数法时使用)
-
-	if (!Detail->Legal)
-	{
-		//非法的数字输出Nan
-		strcpy(tempString, "NaN");
-		length = 3;
-		return tempString;
-	}
-	else
-	{
-		if (Detail->Minus)								//输出负号
-		{
-			tempString[index_p++] = '-';				//写入负号
-			sign++;										//使负号不加入有效位
-		}
-
-		if (UseScinotation)
-		{
-			//使用科学计数法输出
-			if (Detail->LenInt == 1 && Detail->pSInt[0] == '0')
-			{
-				//整数部分数据为0
-				r_index = 0;
-				skip = 0;
-
-				while (Detail->pSFloat[r_index] == '0' && r_index < Detail->AllocFloat) r_index++;	//找到有效位
-
-				if (Detail->pSFloat[r_index] != 0)
-				{
-					skip = -(int)r_index - 1;								//计算省略的位数
-					tempString[index_p++] = Detail->pSFloat[r_index++];		//输出第一位
-					if (Detail->pSFloat[r_index] != 0)
-					{
-						//后面还有有效位,继续输出
-						tempString[index_p++] = '.';						//输出小数点
-						sign++;												//使小数点不加入有效位
-						while (Detail->pSFloat[r_index] != 0 && r_index < Detail->AllocFloat&&index_p < sign)	//输出剩余有效位
-							tempString[index_p++] = Detail->pSFloat[r_index++];
-						if (!ReserveZero)
-						{
-							index_p--;										//定位到上一个写入的位置
-							while (tempString[index_p] == '0')index_p--;	//将有效数字尾部的'0'去除
-							if (tempString[index_p] == '.') index_p--;		//如果遇到小数点,则也将小数点去掉
-							tempString[++index_p] = 0;						//写入'\0'
-						}
-					}
-				}
-				else
-				{
-					//该值为0,写入0
-					tempString[index_p++] = '0';
-					tempString[index_p++] = 0;
-				}
-			}
-			else
-			{
-				//整数部分数据不为0
-				skip = (int)Detail->LenInt - 1;
-				tempString[index_p++] = Detail->pSInt[0];							//把第一位输入
-				if (Detail->pSInt[index_p] != 0)
-				{
-					tempString[index_p++] = '.';
-					size_t temp = ScinotationLen;
-					if (temp > Detail->LenInt)
-						temp = Detail->LenInt;
-					strncpy(tempString + index_p, Detail->pSInt + 1, temp - 1);
-					index_p += temp - 1;
-				}
-				else if (Detail->AllocFloat &&Detail->pSFloat[0] != 0)
-					tempString[index_p++] = '.';							//小数点后有数字
-
-				if (Detail->AllocFloat &&Detail->pSFloat[0] != 0)
-				{
-					if (Detail->LenInt < ScinotationLen)
-					{
-						//整数的有效位不够,继续拿小数位
-						size_t temp = ScinotationLen - Detail->LenInt;
-						if (temp > Detail->LenFloat)
-							temp = Detail->LenFloat;
-						strncpy(tempString + index_p, Detail->pSFloat, temp);
-						index_p += temp;
-					}
-				}
-				if (!ReserveZero)
-				{
-					index_p--;
-					while (tempString[index_p] == '0')index_p--;	//将有效数字尾部的'0'去除
-					if (tempString[index_p] == '.')index_p--;
-					tempString[++index_p] = 0;						//写入'\0'
-				}
-			}
-
-			if (skip) //输出指数
-			{
-				tempString[index_p++] = 'E';
-				sprintf(tempString + index_p, "%d", skip);
-			}
-			while (tempString[index_p] != 0)index_p++;
-			length = index_p;
-		}
-		else
-		{
-			//正常数字输出
-			strncpy(tempString + index_p, Detail->pSInt, Detail->LenInt);
-
-			index_p += Detail->LenInt;
-			if (Detail->LenFloat)
-			{
-				r_index = 0;
-				tempString[index_p++] = '.';
-				while (Detail->pSFloat[r_index] != 0)
-					tempString[index_p++] = Detail->pSFloat[r_index++];
-
-				if (!ReserveZero)									//去除0
-				{
-					index_p--;										//指向上一个已写的位
-					while (tempString[index_p] == '0') index_p--;	//删除为0的位
-					if (tempString[index_p] == '.')index_p--;		//如果小数点被删光,则再删除小数点
-					index_p++;										//指向下一个可写的位
-				}
-			}
-			tempString[index_p] = 0;								//写入字符串结束符
-			length = index_p;
-		}
-	}
-
-	return tempString;
-}
-
 std::string BigFigure::toString()
 {
 	size_t a;
-	char *temp = _toString(a, ScinotationShow, ReserveZero);
+	char *temp = core_toString(Detail, a, ScinotationShow, ReserveZero);
 	std::string ReturnVal = std::string(temp, a);
 	delete[] temp;
 	return ReturnVal;
@@ -654,7 +434,7 @@ std::string BigFigure::toString()
 std::string BigFigure::toString(bool UseScinotation, bool ReserveZero)
 {
 	size_t a;
-	char *temp = _toString(a, UseScinotation, ReserveZero);
+	char *temp = core_toString(Detail, a, UseScinotation, ReserveZero);
 	std::string ReturnVal = std::string(temp, a);
 	delete[] temp;
 	return ReturnVal;
@@ -663,7 +443,7 @@ std::string BigFigure::toString(bool UseScinotation, bool ReserveZero)
 BFString BigFigure::toBFString()
 {
 	size_t a;
-	char *temp = _toString(a, ScinotationShow, ReserveZero);
+	char *temp = core_toString(Detail, a, ScinotationShow, ReserveZero);
 	BFString ReturnVal(temp, a);
 	delete[] temp;
 	return ReturnVal;
@@ -671,22 +451,25 @@ BFString BigFigure::toBFString()
 BFString BigFigure::toBFString(bool UseScinotation, bool ReserveZero)
 {
 	size_t a;
-	char *temp = _toString(a, UseScinotation, ReserveZero);
+	char *temp = core_toString(Detail, a, UseScinotation, ReserveZero);
 	BFString ReturnVal(temp, a);
 	delete[] temp;
 	return ReturnVal;
 }
 
-
 char* BigFigure::toCString(char *result)
 {
 	size_t a;
-	strcpy(result, _toString(a, ScinotationShow, ReserveZero));
+	char *temp = core_toString(Detail, a, ScinotationShow, ReserveZero);
+	strcpy(result, temp);
+	delete temp;
 	return result;
 }
 char* BigFigure::toCString(char *result, bool UseScinotation, bool ReserveZero)
 {
 	size_t a;
-	strcpy(result, _toString(a, UseScinotation, ReserveZero));
+	char *temp = core_toString(Detail, a, UseScinotation, ReserveZero);
+	strcpy(result, temp);
+	delete temp;
 	return result;
 }
