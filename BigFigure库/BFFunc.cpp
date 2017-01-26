@@ -661,6 +661,55 @@ BFDetail * core_BFSub(BFDetail*result, const BFDetail * OperandA, const BFDetail
 	return result;
 }
 
+BFDetail * core_BFAdd(BFDetail * result, const BFDetail * OperandA, char * OperandB_i, size_t Lengthi, char *OperandB_f, size_t Lengthf, bool minusB)
+{
+	bool minusA = OperandA->Minus;
+	if (!(minusA || minusB))
+	{
+		//正正相加
+		core_IntAdd(result, OperandA->pSInt, OperandA->LenInt, OperandB_i, Lengthi, core_FloatAdd(result, OperandA->pSFloat, OperandA->LenFloat, OperandB_f, Lengthf));
+		result->Minus = false;
+	}
+	else if (minusA && !minusB)
+	{
+		//负正相加
+		if (core_BFCmp_abs(OperandA, OperandB_i, Lengthi, OperandB_f, Lengthf, 1) > 0)
+		{
+			//-5+3=-2
+			core_IntSub(result, OperandA->pSInt, OperandA->LenInt, OperandB_i, Lengthi, core_FloatSub(result, OperandA->pSFloat, OperandA->LenFloat, OperandB_f, Lengthf));
+			result->Minus = true;
+		}
+		else
+		{
+			//-2+5=3
+			core_IntSub(result, OperandB_i, Lengthi, OperandA->pSInt, OperandA->LenInt, core_FloatSub(result, OperandB_f, Lengthf, OperandA->pSFloat, OperandA->LenFloat));
+			result->Minus = false;
+		}
+	}
+	else if (!minusA&&minusB)
+	{
+		//正负相加
+		if (core_BFCmp_abs(OperandA, OperandB_i, Lengthi, OperandB_f, Lengthf, 1) >= 0)
+		{
+			//5-3=2
+			core_IntSub(result, OperandA->pSInt, OperandA->LenInt, OperandB_i, Lengthi, core_FloatSub(result, OperandA->pSFloat, OperandA->LenFloat, OperandB_f, Lengthf));
+			result->Minus = false;
+		}
+		else
+		{
+			//2-5=-3
+			core_IntSub(result, OperandB_i, Lengthi, OperandA->pSInt, OperandA->LenInt, core_FloatSub(result, OperandB_f, Lengthf, OperandA->pSFloat, OperandA->LenFloat));
+			result->Minus = true;
+		}
+	}
+	else {
+		//负负相加
+		core_IntAdd(result, OperandA->pSInt, OperandA->LenInt, OperandB_i, Lengthi, core_FloatAdd(result, OperandA->pSFloat, OperandA->LenFloat, OperandB_f, Lengthf));
+		result->Minus = true;
+	}
+	return result;
+}
+
 
 BFDetail* core_Expand(BFDetail* OperandDetail, size_t IntSize, size_t FloatSize)
 {
@@ -713,16 +762,16 @@ BFDetail* core_Expand(BFDetail* OperandDetail, size_t IntSize, size_t FloatSize)
 		}
 		//运行到这里如果没有发生错误,则可以安全得提交数据
 		delete[]  OperandDetail->DataHead;
-		 OperandDetail->DataHead = temp;
-		 OperandDetail->pSRP = temp + IntSize;
-		if ( OperandDetail->LenInt > IntSize)			//为被截断的数字重新计算长度
-			 OperandDetail->LenInt = IntSize;
-		if ( OperandDetail->LenFloat > FloatSize)
-			 OperandDetail->LenFloat = FloatSize;
-		 OperandDetail->pSInt = OperandDetail->pSRP - OperandDetail->LenInt;
-		 OperandDetail->pSFloat = OperandDetail->pSRP + 1;
-		 OperandDetail->AllocInt = IntSize;
-		 OperandDetail->AllocFloat = FloatSize;
+		OperandDetail->DataHead = temp;
+		OperandDetail->pSRP = temp + IntSize;
+		if (OperandDetail->LenInt > IntSize)			//为被截断的数字重新计算长度
+			OperandDetail->LenInt = IntSize;
+		if (OperandDetail->LenFloat > FloatSize)
+			OperandDetail->LenFloat = FloatSize;
+		OperandDetail->pSInt = OperandDetail->pSRP - OperandDetail->LenInt;
+		OperandDetail->pSFloat = OperandDetail->pSRP + 1;
+		OperandDetail->AllocInt = IntSize;
+		OperandDetail->AllocFloat = FloatSize;
 
 	}
 	catch (std::bad_alloc)
@@ -735,7 +784,7 @@ BFDetail* core_Expand(BFDetail* OperandDetail, size_t IntSize, size_t FloatSize)
 
 //将BF转化为数字进行输出(核心)
 //此函数不要自己调用它,而应该调用它的封装版本
-char* core_toString(BFDetail * OperandDetail,size_t &length, bool UseScinotation, bool ReserveZero)
+char* core_toString(BFDetail * OperandDetail, size_t &length, bool UseScinotation, bool ReserveZero)
 {
 	char *tempString = new char[OperandDetail->LenInt + OperandDetail->LenFloat + 7];	//新建一块足够存放数据的缓冲区;							//保存缓冲区地址
 	int skip;											//被跳过的位数省略的位数用于最终计算指数
@@ -900,7 +949,7 @@ void core_CopyDetail(BFDetail* Dest, const BFDetail * Source)
 		case ERR_MAYACCURACYLOSS:
 			if (AutoExpand)
 			{
-				core_Expand(Dest, Dest->AllocInt > Source->LenFloat ? Dest->AllocInt : Source->LenFloat,
+				core_Expand(Dest, Dest->AllocInt > Source->LenInt ? Dest->AllocInt : Source->LenInt,
 					Dest->AllocFloat > Source->LenFloat ? Dest->AllocFloat : Source->LenFloat);
 				break;
 
@@ -1012,6 +1061,52 @@ int core_BFCmp_abs(const BFDetail*OperandA, const BFDetail *OperandB, int minus)
 			//整数部分完全相等,继续进行比较小数部分
 			char *StringAH = OperandA->pSFloat,
 				*StringBH = OperandB->pSFloat;
+
+			while (*StringAH && *StringAH == *StringBH)StringAH++, StringBH++;		//找到不相等项,并且确保他们都不为'\0'
+			if (*StringBH && *StringAH > *StringBH)
+				return minus;
+			else if (*StringAH && *StringAH < *StringBH)
+				return -minus;
+			else
+			{
+				//找到不相等的项(可能存在相等但小数末尾的0太多)
+				temp = 0;
+				if (*StringAH == '0')
+				{
+					while (*StringAH == '0'&&*StringAH != 0)StringAH++;
+					if (*StringAH != 0 && *StringAH != '0')
+						temp = 1;
+				}
+				if (*StringBH == '0')
+				{
+					while (*StringBH == '0'&&*StringBH != 0)StringBH++;
+					if (*StringBH != 0 && *StringBH != '0')
+						temp = -1;
+				}
+				return temp*minus;
+			}
+		}
+	}
+}
+
+int core_BFCmp_abs(const BFDetail*OperandA, char * OperandB_i, size_t Lengthi, char *OperandB_f, size_t Lengthf, int minus)
+{
+	//判断位
+	if (OperandA->LenInt > Lengthi)
+		return 2 * minus;
+	else if (OperandA->LenInt < Lengthi)
+		return -2 * minus;
+	else
+	{
+		//如果两个数整数部分长度相等,则进行比较各个位
+		int temp = strcmp(OperandA->pSInt, OperandB_i);
+		if (temp)
+			return temp*minus;		//比较出结果,返回
+		else
+		{
+			//整数部分完全相等,继续进行比较小数部分
+			char *StringAH = OperandA->pSFloat,
+				*StringBH = OperandB_f;
 
 			while (*StringAH && *StringAH == *StringBH)StringAH++, StringBH++;		//找到不相等项,并且确保他们都不为'\0'
 			if (*StringBH && *StringAH > *StringBH)

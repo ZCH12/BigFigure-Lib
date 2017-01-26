@@ -51,7 +51,9 @@ void testTime()
 int main()
 {
 	BF a(100, 100), b(100, 120), c(3, 100);
-	a = "-1.123";
+
+	NumStringDetail n(1.0);
+	a = 1.0;
 	b = "0.999999";
 
 

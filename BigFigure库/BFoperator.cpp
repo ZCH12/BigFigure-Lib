@@ -88,3 +88,41 @@ _BigFigure& operator-(_BigFigure &OperandA, const _BigFigure &OperandB)
 	core_BFSub(OperandA.Detail, OperandA.Detail, OperandB.Detail);
 	return OperandA;
 }
+
+_BigFigure operator+(const BigFigure &OperandA, const double OperandB)
+{
+	BigFigure OperandB1(16, 16);
+	OperandB1.toBF(NumStringDetail(OperandB));
+	_BigFigure Return((OperandA.Detail->AllocInt > OperandB1.Detail->AllocInt ? OperandA.Detail->AllocInt : OperandB1.Detail->AllocInt) + 1,
+		OperandA.Detail->AllocFloat > OperandB1.Detail->AllocFloat ? OperandA.Detail->AllocFloat : OperandB1.Detail->AllocFloat);
+
+	core_BFAdd(Return.Detail, OperandA.Detail, OperandB1.Detail);
+	return Return;
+}
+
+_BigFigure operator-(const BigFigure &OperandA, const double OperandB)
+{
+	BigFigure OperandB1(16, 16);
+	OperandB1.toBF(NumStringDetail(OperandB));
+	_BigFigure Return((OperandA.Detail->AllocInt > OperandB1.Detail->AllocInt ? OperandA.Detail->AllocInt : OperandB1.Detail->AllocInt) + 1,
+		OperandA.Detail->AllocFloat > OperandB1.Detail->AllocFloat ? OperandA.Detail->AllocFloat : OperandB1.Detail->AllocFloat);
+
+	core_BFSub(Return.Detail, OperandA.Detail, OperandB1.Detail);
+	return Return;
+}
+
+_BigFigure operator+(const _BigFigure &OperandA, const double OperandB)
+{
+	BigFigure OperandB1(16, 16);
+	OperandB1.toBF(NumStringDetail(OperandB));
+	core_BFAdd(OperandA.Detail, OperandA.Detail, OperandB1.Detail);
+	return OperandA;
+}
+
+_BigFigure operator-(const _BigFigure &OperandA, const double OperandB)
+{
+	BigFigure OperandB1(16, 16);
+	OperandB1.toBF(NumStringDetail(OperandB));
+	core_BFSub(OperandA.Detail, OperandA.Detail, OperandB1.Detail);
+	return OperandA;
+}

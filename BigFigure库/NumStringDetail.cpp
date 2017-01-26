@@ -158,12 +158,6 @@ inline void NumStringDetail::NumCheck(const char * NumString)
 	}
 
 	//结束for
-	if (HasPoint)
-	{
-		const char *temp = NumString + this->FloatStart_p;
-		while (this->FloatLen&& temp[this->FloatLen] == '0')	//去除小数点后的'0'
-			this->FloatLen--;
-	}
 
 	this->IntBeZero = IntBeZero;
 	if (Scinotation)			//判断是否为科学计数法表示的数
@@ -184,9 +178,21 @@ inline void NumStringDetail::NumCheck(const char * NumString)
 		//用标准表示法表示的数字
 		this->Mode = 0;		//初始化为0,Mode将为1,2
 		if (HasPoint)		//计算还未计算的长度值
-			this->FloatLen = tempString - NumString - this->FloatStart_p;
+		{
+			if (HasNumPre)
+				this->FloatLen = tempString - NumString - this->FloatStart_p;
+			else
+				this->FloatLen = 0;
+		}
 		else
 			this->IntLen = tempString - NumString - this->IntStart_p;
+	}
+
+	if (HasPoint)
+	{
+		const char *temp = NumString + this->FloatStart_p;
+		while (this->FloatLen&& temp[this->FloatLen] == '0')	//去除小数点后的'0'
+			this->FloatLen--;
 	}
 
 	if (HasPoint)					//判断是否为小数

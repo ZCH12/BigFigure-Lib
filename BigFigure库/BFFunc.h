@@ -28,7 +28,7 @@ void core_FloatCopy(BFDetail* result, const char * OperandA, size_t LengthA);
 
 BFDetail * core_BFAdd(BFDetail * result, const BFDetail * OperandA, const BFDetail * OperandB);
 BFDetail * core_BFSub(BFDetail*result, const BFDetail * OperandA, const BFDetail * OperandB);
-
+BFDetail * core_BFAdd(BFDetail * result, const BFDetail * OperandA, char * OperandB_i, size_t Lengthi, char *OperandB_f, size_t Lengthf, bool minusB);
 
 BFDetail* core_Expand(BFDetail* OperandDetail, size_t IntSize, size_t FloatSize);
 char* core_toString(BFDetail * OperandDetail, size_t &length, bool UseScinotation, bool ReserveZero);
@@ -37,7 +37,7 @@ void core_CopyDetail(BFDetail* Dest, const BFDetail * Source);
 int core_BFCmp(const BFDetail *OperandA, const BFDetail *OperandB);
 int core_BFCmp_abs(const BFDetail*OperandA, const BFDetail *OperandB);
 int core_BFCmp_abs(const BFDetail*OperandA, const BFDetail *OperandB, int minus);
-
+int core_BFCmp_abs(const BFDetail*OperandA, char * OperandB_i, size_t Lengthi, char *OperandB_f, size_t Lengthf, int minus);
 
 #endif // !BFFUNC_H
 

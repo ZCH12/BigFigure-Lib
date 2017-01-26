@@ -31,7 +31,7 @@ private:
 	struct BFDetail *Detail;
 
 	//friend int BFCmp_abs(const BigFigure &OperandA, const BigFigure &OperandB, int minus);	//比较两个数的绝对值大小
-	char* BigFigure::_toString(size_t &length, bool UseScinotation, bool ReserveZero);
+	//char* _toString(size_t &length, bool UseScinotation, bool ReserveZero);
 public:
 	//构造器与析构器
 	//BigFigure();
@@ -126,7 +126,9 @@ public:
 	friend _BigFigure& operator-(_BigFigure &OperandA, const BigFigure &OperandB);
 
 	friend _BigFigure operator+(const BigFigure &OperandA, const double OperandB);
-
+	friend _BigFigure operator-(const BigFigure &OperandA, const double OperandB);
+	friend _BigFigure operator+(const _BigFigure &OperandA, const double OperandB);
+	friend _BigFigure operator-(const _BigFigure &OperandA, const double OperandB);
 /*
 	friend BigFigure operator-(const BigFigure & OperandA, const BigFigure & OperandB);
 	friend BigFigure operator-(const BigFigure & OperandA, const double OperandB);

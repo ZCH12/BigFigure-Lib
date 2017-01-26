@@ -48,6 +48,11 @@ public:
 	friend _BigFigure& operator-(_BigFigure &OperandA, const BigFigure &OperandB);
 	friend _BigFigure& operator+(_BigFigure &OperandA, const _BigFigure &OperandB);
 	friend _BigFigure& operator-(_BigFigure &OperandA, const _BigFigure &OperandB);
+
+	friend _BigFigure operator+(const BigFigure &OperandA, const double OperandB);
+	friend _BigFigure operator-(const BigFigure &OperandA, const double OperandB);
+	friend _BigFigure operator+(const _BigFigure &OperandA, const double OperandB);
+	friend _BigFigure operator-(const _BigFigure &OperandA, const double OperandB);
 	friend class BigFigure;
 };
 
